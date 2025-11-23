@@ -1,12 +1,42 @@
 # UNLP 2026 Shared Task on Multi-Domain Document Understanding
 
-The Fifth Ukrainian NLP Conference (UNLP 2026) organizes a Shared Task on Multi-Domain Document Understanding. This Shared Task aims to challenge and assess AI capabilities to find the right information in a stack of domain-specific documents written in Ukrainian.
+The Fifth Ukrainian NLP Conference ([UNLP 2026](https://unlp.org.ua/)) organizes a Shared Task on Multi-Domain Document Understanding. This Shared Task aims to challenge and assess AI capabilities to find the right information in a stack of domain-specific documents and generalize across domains.
+
+**[Registration Form](https://forms.gle/XSgyBBEB7T5Gn9gQ6)**  
+**Please register by February 21, 2026.**
+
+Join the discussions in Discord via https://discord.gg/DYNnWaZD4a.
 
 ## Task Description
 
+In this shared task, your goal is to build a solution that, given a set of documents, can (1) find the correct answer to a multiple-choice question and (2) identify the document and page where the answer was found.
+
+The competition will run on Kaggle in the **code-only** mode, which means that you will submit your solution as code, e.g., a Python script or notebook, rather than submitting just test answers. Your solution should be able to run on a single P100 GPU and complete all test sets prediction within 9 hours. The code-only mode will facilitate fair competition. ⚖️
+
+You are free to use any open-source embeddings and large language models of your choice — just keep in mind the compute limitations, which may not allow you to use the larger LLMs.
+
+We encourage you to use LLMs specifically trained to work with the Ukrainian language, like [LapaLLM](https://huggingface.co/lapa-llm) and [MamayLM](https://huggingface.co/collections/INSAIT-Institute/mamaylm-v10-gemma-3).
+
 ## Data
 
+Input data are grouped into domains. Each domain is represented by a folder of PDF documents with anonymized filenames and a `readme.txt` file that describes the domain.
+
+The data is partitioned as follows:  
+15% — dev  
+25% — test_public  
+60% — test_private
+
+`Dev` and `test_public` have two domains, while `test_private` has three domains. The additional domain will help assess how well your solution adapts to an unknown domain.
+
+Please see the sample `dev` files for two domains in the [data](data/) folder.
+
 ## Evaluation
+
+The total score consists of two equal parts: the correct answers to multiple-choice questions and the correct references. The exact metric is TBD.
+
+Please see the sample questions for the `dev` files in the [data](data/) folder.
+
+Consider generating similar questions for self-assessment while the Kaggle link is unavailable.
 
 ## Publication
 
@@ -16,15 +46,15 @@ Submitting a paper is not mandatory for participating in the Shared Task.
 
 ## Important Dates
 
-- **December 1, 2025** — Shared task announcement  
-- **December 10, 2026** — Release of train data  
-- **January 10, 2024** — Second call for participation
+- **December 1, 2025** — Shared task announcement
+- **December 20, 2025** — Second call for participation; the Kaggle competition link is sent to the registered participants
+- **January 10, 2026** — Third call for participation
 - **February 21, 2026** — Registration deadline
-- **February 22 (11:58 PM GMT +02:00), 2026** — Final submission of system responses  
-- **February 25, 2026** — Results of the Shared Task announced and release of test data  
-- **March 8, 2026** — Shared Task paper due  
-- **April 15, 2026** — Notification of acceptance  
-- **April 26, 2026** — Camera-ready Shared Task papers due  
+- **February 22 (11:58 PM GMT +02:00), 2026** — Final submission of system responses
+- **February 25, 2026** — Results of the Shared Task are announced
+- **March 8, 2026** — Shared Task paper due
+- **April 15, 2026** — Notification of acceptance
+- **April 26, 2026** — Camera-ready Shared Task papers due
 - **May 29–30, 2026** — Conference dates
 
 ## Contacts
