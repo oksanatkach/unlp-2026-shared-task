@@ -49,9 +49,9 @@ and the page proximity score is
 <img src="img/p.png" alt="Page proximity" width="65%" height="65%"/>
 
 Please see the sample questions for the `dev` files in the [data](data/) folder:
-* Your **input data** are columns `Question_ID`, `Question`, and `A-F`, which represent possible answers to the question.
+* Your **input data** are columns `Question_ID`, `Question`, and `A-F` that represent possible answers to the question.
 * Your solution should **predict** the values in `Correct_Answer`, `Doc_ID`, and `Page_Num`.
-* We provide `Domain` and `n_pages` (number of pages in the correct document) for `dev` to get you started. These columns will not be present in the test data.
+* We provide `Domain` and `N_Pages` of the correct document for `dev` to get you started. These columns will **not** be present in the test data.
 
 Consider generating more questions on the dev set for self-assessment while we are working on the Kaggle setup.
 
