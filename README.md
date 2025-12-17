@@ -9,6 +9,12 @@ The Kaggle link will be sent to the registered participants on **December 20, 20
 
 Join the discussions in Discord via https://discord.gg/DYNnWaZD4a.
 
+## Updates
+
+**2025-12-17**:
+
+* Add `readme-en.txt` files describing the domains in English.
+
 ## Task Description
 
 In this shared task, your goal is to build a solution that, given a set of documents, can (1) find the correct answer to a multiple-choice question and (2) identify the document and page where the answer was found.
@@ -21,7 +27,7 @@ We encourage you to use LLMs specifically trained to work with the Ukrainian lan
 
 ## Data
 
-Input data are grouped into domains. Each domain is represented by a folder of PDF documents with anonymized filenames and a `readme.txt` file that describes the domain.
+Input data are grouped into domains. Each domain is represented by a folder of PDF documents with anonymized filenames and two readme files that describe the domain: `readme.txt` in Ukrainian and `readme-en.txt` in English.
 
 The data is partitioned as follows:  
 15% — dev  
