@@ -74,17 +74,17 @@ Submitting a paper is not mandatory for participating in the Shared Task.
 
 ## Important Dates
 
-- **December 1, 2025** — Shared task announcement
-- **December 20, 2025** — Second call for participation
-- **January 14, 2026** — Third call for participation
-- **January 15, 2026** — (tentatively) The Kaggle competition link is sent to the registered participants
-- **February 21, 2026** — Registration deadline
-- **February 22 (11:58 PM GMT +02:00), 2026** — Final submission of system responses
-- **February 25, 2026** — Results of the Shared Task are announced
-- **March 8, 2026** — Shared Task paper due
-- **April 15, 2026** — Notification of acceptance
-- **April 26, 2026** — Camera-ready Shared Task papers due
-- **May 29–30, 2026** — Conference dates
+- December 1, 2025 — Shared task announcement
+- December 20, 2025 — Second call for participation
+- January 10, 2026 — Third call for participation
+- March 2, 2026 — the Kaggle competition link is sent to the registered participants
+- March 29, 2026 — Registration deadline
+- March 30 (11:58 PM GMT +02:00), 2026 — Final submission of system responses
+- April 2, 2026 — Results of the Shared Task are announced
+- April 8, 2026 (extended) — Shared Task paper due
+- April 15, 2026 — Notification of acceptance
+- April 26, 2026 — Camera-ready Shared Task papers due
+- May 29–30, 2026 — Conference dates
 
 ## Contacts
 
