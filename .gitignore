@@ -1,3 +1,5 @@
 __pycache__
 *.bak
 .DS_Store
+.idea
+.idea/*
