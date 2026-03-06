@@ -30,7 +30,7 @@ def evaluate_pipeline(questions: Iterable[Dict], top_k: int = 5):
                 D += 1
 
                 doc_len = len(json.load(
-                    open(f'data/output/pdf_info/{row['Domain']}/{best_chunk['doc_id']}_page_ranges.json')))
+                    open(f'{config.pdf_info_path}/{row['Domain']}/{best_chunk['doc_id']}_page_ranges.json')))
                 P += 1 - (abs(best_chunk['page_number'] - int(row['Page_Num'])) / doc_len)
 
     return 0.5 * (A / N) + 0.25 * (D / N) + 0.25 * (P / N)
