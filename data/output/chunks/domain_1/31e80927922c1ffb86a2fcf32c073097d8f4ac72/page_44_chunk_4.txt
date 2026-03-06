@@ -1,0 +1,61 @@
+Сентей: Kushanku /
+Niseishi / Jion /
+Passai
+
+Токуй: Chinto /
+Naihanchi /
+Rohai / Wanshu
+/ Seishan /
+Suparimpei /
+Unsu
+
+
+
+Вадо-рю: Шитей, Сентей, Токуй
+
+Коло 1
+Вибрати з:: Pinan 1,2,3,4,5., -----, -----
+
+Коло 2
+Вибрати з:: -----, Kushanku /
+Niseishi / Jion /
+Passai, -----
+
+Коло 3
+Вибрати з:: Pinan 1,2,3,4,5., Kushanku /
+Niseishi / Jion /
+Passai, Chinto /
+Naihanchi /
+Rohai / Wanshu
+/ Seishan /
+Suparimpei /
+Unsu
+
+
+
+Шорин-рю: Коло 1
+Вибрати з:
+
+Шитей: Fukyugata Ichi /
+Fukyugata Ni /
+Pinan 1,2,3,4,5 /
+Naihanchi Shodan
+/ Naihanchi Nidan
+/Naihanchi Sandan
+
+Сентей: -----
+
+Токуй: -----
+
+
+
+Шорин-рю: Шитей, Сентей, Токуй
+
+Коло 1
+Вибрати з:: Fukyugata Ichi /
+Fukyugata Ni /
+Pinan 1,2,3,4,5 /
+Naihanchi Shodan
+/ Naihanchi Nidan
+/Naihanchi Sandan, -----, -----
+

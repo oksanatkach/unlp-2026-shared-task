@@ -1,0 +1,11 @@
+1st, 2nd, 3rd.: = човен, який посів перше місце, човен, який посів друге місце,
+човен, який посів третє місце (boat winning first place, boat winning
+second place, boat winning third place).
+
+3x3rd, 4x4th, 4x6th.: = 3 човни з третіх місць, 4 човни з четвертих місць, 4 човни з
+шостих місць (3 boats in third places, 4 boats in fourth places, 4 boats
+in sixth places).
+
+4/H1 ... L7: 4-те місце з 1 попереднього буде стартувати на 7 воді (4th place from
+Heat 1 will start in lane 7)
+

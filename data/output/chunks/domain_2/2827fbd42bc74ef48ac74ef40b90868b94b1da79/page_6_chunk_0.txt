@@ -1,0 +1,18 @@
+
+Neisseria meningitidis.
+Анаероби:
+Clostridium perftringens, Peptostreptococci.
+Види, набута резистентність до яких може бути загрозлива для пацієнта.
+Аероби:
+Staphylococcus aureus, Streptococcus pneumoniae, Streptococcus viridans, Esherichia coli,
+Нaemophilus influenzae, Нaemophilus parainfluenzae, Klebsiella spp., Moraxella catarrhalis,
+Proteus mirabilis, Proteus spp., Proteus vulgaris, Providencia spp.
+Анаероби:
+Bacteroides spp., Fusobacterium spp.
+Організми, для яких властива резистентність:
+Грам негативні аероби:
+Acinebacter spp., Citrobacter spp., Enterobacter spp., Pseudomonas spp., Serrata spp.
+Інші:
+Chlamidia, Mycoplasma, Ricketsia.
+Фармакокінетика.
+Всмоктування. Абсолютна біодоступність амоксициліну становить від 75 % до 90 %.

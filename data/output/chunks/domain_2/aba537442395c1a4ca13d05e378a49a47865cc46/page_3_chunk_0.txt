@@ -1,0 +1,29 @@
+
+Acinetobacter baumanii
+Haemophilus influenzae*
+Legionella pneumophila
+Moraxella (Branhamella) catarrhalis*
+Анаеробні мікроорганізми
+Prevotellaspp.
+Інші мікроорганізми
+Chlamydophila (Chlamydia) pneumoniae*
+Coxiella burnetii
+Mycoplasma pneumoniae*
+Види, для яких можливий розвиток резистентності
+Аеробні грампозитивні мікроорганізми
+Enterococcus faecalis*
+Enterococcus faecium*
+Аеробні грамнегативні мікроорганізми
+Enterobacter cloacae*
+#
+Escherichia coli*
+#
+Klebsiella pneumoniae*
+Klebsiella oxytoca
+Proteus mirabilis*
+Анаеробні мікроорганізми
+Bacteroides fragilis*
+Резистентні мікроорганізми
+Аеробні грамнегативні мікроорганізми
+Pseudomonas aeruginosa
+*Ефективність достатньою мірою продемонстрована у клінічних дослідженнях.

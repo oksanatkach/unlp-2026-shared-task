@@ -1,0 +1,71 @@
+Коло 3
+Вибрати з:: Heian 1,2,3,4,5.
+Tekki-Shodan, Bassai-Dai / Enpi
+/ Kanku-Dai /
+Jion / Hangetsu, Jitte / Tekki-
+Nidan / Tekki-
+Sandan /
+Gankaku /
+Bassai-Sho /
+Kanku-Sho /
+Sochin /
+Nijushiho /
+Gojushiho-Dai /
+Gojushiho-Sho /
+Wankan / Chinte
+/ Unsu / Meikyo
+
+
+
+Вадо-рю: Коло 1
+Вибрати з:
+
+Шитей: Pinan 1,2,3,4,5.
+
+Сентей: -----
+
+Токуй: -----
+
+
+
+Вадо-рю: Коло 2
+Вибрати з:
+
+Шитей: -----
+
+Сентей: Kushanku /
+Niseishi / Jion /
+Passai
+
+Токуй: -----
+
+
+
+Вадо-рю: Коло 3
+Вибрати з:
+
+Шитей: Pinan 1,2,3,4,5.
+
+Сентей: Kushanku /
+Niseishi / Jion /
+Passai
+
+Токуй: Chinto /
+Naihanchi /
+Rohai / Wanshu
+/ Seishan /
+Suparimpei /
+Unsu
+
+
+
+Вадо-рю: Шитей, Сентей, Токуй
+
+Коло 1
+Вибрати з:: Pinan 1,2,3,4,5., -----, -----
+
+Коло 2
+Вибрати з:: -----, Kushanku /
+Niseishi / Jion /
+Passai, -----
+

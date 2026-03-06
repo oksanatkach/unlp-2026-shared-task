@@ -1,0 +1,126 @@
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
+import rank_bm25
+from typing import Dict, List, Tuple
+
+import retriever
+import config
+import prompt_templates
+
+
+options_columns = ['A', 'B', 'C', 'D', 'E', 'F']
+document_retriever: rank_bm25.BM25Okapi | None = None
+llm : AutoModelForCausalLM | None = None
+tokenizer: AutoTokenizer | None = None
+option_token_ids: List[str] | None = None
+yes_token_ids: List[str] | None = None
+
+
+def init():
+    global document_retriever, llm, tokenizer, option_token_ids, yes_token_ids
+
+    if document_retriever is None:
+        document_retriever = retriever.init_retriever(config.chunks_path)
+
+    if llm is None:
+        llm = AutoModelForCausalLM.from_pretrained(
+            config.model_name,
+            quantization_config=config.bnb_config,
+            device_map="cuda"
+        )
+
+    if tokenizer is None:
+        tokenizer = AutoTokenizer.from_pretrained(config.model_name)
+
+    if option_token_ids is None:
+        option_token_ids = tokenizer.convert_tokens_to_ids(['A', '▁A',
+                                                            'B', '▁B',
+                                                            'C', '▁C',
+                                                            'D', '▁D',
+                                                            'E', '▁E',
+                                                            'F' '▁F',
+                                                            ])
+
+    if yes_token_ids is None:
+        yes_token_ids = tokenizer.convert_tokens_to_ids(['yes', '▁yes',
+                                                         'Yes', '▁Yes',
+                                                         'YES', '▁YES'
+                                                         ])
+
+
+def get_best_answer_from_logits(logits: torch.Tensor, valid_token_ids: List[int]) -> Tuple[int, int]:
+    option_mask = torch.zeros_like(logits, dtype=torch.bool)
+    option_mask[:, valid_token_ids] = True
+    combined_mask = torch.isfinite(logits) & option_mask
+    valid_logits = logits[combined_mask]
+    valid_indices = combined_mask.nonzero()
+    prompt_ids = valid_indices[:, 0].tolist()
+    token_ids = valid_indices[:, 1].tolist()
+    sorted_logits = valid_logits.argsort(descending=True).tolist()
+    best_element_ind = sorted_logits[0]
+    return prompt_ids[best_element_ind], token_ids[best_element_ind]
+
+
+def answer_question(row: Dict, top_k: int) -> Tuple[str, Dict]:
+    question = row['Question']
+    options = [row[letter] for letter in options_columns if row[letter]]
+    top_chunks = document_retriever.retrieve_chunks(question, options, top_k=top_k)
+
+    options = zip(options_columns[:len(options)], options)
+    options = [': '.join(el) for el in options]
+    options = '\n'.join(options)
+
+    prompts = [prompt_templates.prompt_template % (chunk['text'], question, options) for chunk in top_chunks]
+    tokens = tokenizer(prompts, return_tensors='pt', padding=True)
+
+    outputs = llm.generate(
+        **tokens,
+        return_dict_in_generate=True,
+        output_scores=True,
+        max_new_tokens=1
+    )
+    logits = outputs.scores[0]
+    best_chunk_id, best_token_id = get_best_answer_from_logits(logits, option_token_ids)
+
+    option_letter = tokenizer.convert_ids_to_tokens(best_token_id)
+    # todo: check tokenizer vocab to see if colon can ever be returned
+    option_letter = option_letter.strip().strip(':')
+
+    return option_letter, top_chunks[best_chunk_id]
+
+
+def answer_question_yes_no(row: Dict, top_k: int) -> Tuple[str, Dict]:
+    question = row['Question']
+    options = [row[letter] for letter in options_columns if row[letter]]
+    top_chunks = document_retriever.retrieve_chunks(question, options, top_k=top_k)
+
+    prompts = [
+        prompt_templates.prompt_template_yes_no % (chunk_dict["text"], question, row[option_letter])
+        for ind, chunk_dict in enumerate(top_chunks)
+        for option_letter in options_columns
+    ]
+    tokens = tokenizer(prompts, return_tensors='pt', padding=True)
+
+    outputs = llm.generate(
+        **tokens,
+        return_dict_in_generate=True,
+        output_scores=True,
+        max_new_tokens=1
+    )
+    logits = outputs.scores[0]
+    best_prompt_id, best_token_id = get_best_answer_from_logits(logits, yes_token_ids)
+
+    option_letter = options_columns[best_prompt_id % len(options_columns)]
+    best_chunk = top_chunks[best_prompt_id // len(options_columns)]
+
+    return option_letter, best_chunk
+
+
+if __name__ == '__main__':
+    import csv
+
+    init()
+
+    dev_questions = csv.DictReader(open(config.dev_questions_path))
+    print(answer_question(next(dev_questions), top_k=config.RETRIEVER_TOP_K))
+    # {'Question_ID': '0', 'Domain': 'domain_2', 'N_Pages': '5', 'Question': 'Як рекомендовано приймати ретаболіл дорослим?', 'A': 'внутрішньо', 'B': 'підшкірно', 'C': 'орально', 'D': 'внутрішньовенно', 'E': 'внутрішньом’язово', 'F': 'інгаляційно', 'Correct_Answer': 'E', 'Doc_ID': '4e779acee13fa6e0763fb33d1c83030b8e6ea33d.pdf', 'Page_Num': '1'}

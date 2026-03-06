@@ -1,0 +1,30 @@
+= попередній заїзд (Heat): = човен, який посів перше місце, човен, який посів друге місце,
+човен, який посів третє місце (boat winning first place, boat winning
+second place, boat winning third place).
+
+
+
+H: 3x3rd, 4x4th, 4x6th.
+
+= попередній заїзд (Heat): = 3 човни з третіх місць, 4 човни з четвертих місць, 4 човни з
+шостих місць (3 boats in third places, 4 boats in fourth places, 4 boats
+in sixth places).
+
+
+
+H: 4/H1 ... L7
+
+= попередній заїзд (Heat): 4-те місце з 1 попереднього буде стартувати на 7 воді (4th place from
+Heat 1 will start in lane 7)
+
+
+
+H: = попередній заїзд (Heat)
+
+QF: = чвертьфінальний заїзд (Quarterfinal)
+
+SF: = півфінальний заїзд (Semifinal)
+
+BT: = кращий час (by time)
+
+1-2, 1-3, 2-7.
