@@ -18,20 +18,23 @@ def evaluate_pipeline(questions: Iterable[Dict], top_k: int = 5):
     N = 0
     for row in questions:
         print('Processing a row')
-        option_letter, best_chunk = answer_question(row, top_k=top_k)
+        answer = answer_question(row, top_k=top_k)
         print('Finished processing a row')
         N += 1
 
-        if option_letter and row['Correct_Answer'] == option_letter:
-            A += 1
+        if answer:
+            option_letter, best_chunk = answer
 
-        if best_chunk and best_chunk['domain'] == row['Domain']:
-            if best_chunk['doc_id'] == row['Doc_ID'].split('.')[0]:
-                D += 1
+            if option_letter and row['Correct_Answer'] == option_letter:
+                A += 1
 
-                doc_len = len(json.load(
-                    open(f'{config.pdf_info_path}/{row['Domain']}/{best_chunk['doc_id']}_page_ranges.json')))
-                P += 1 - (abs(best_chunk['page_number'] - int(row['Page_Num'])) / doc_len)
+            if best_chunk and best_chunk['domain'] == row['Domain']:
+                if best_chunk['doc_id'] == row['Doc_ID'].split('.')[0]:
+                    D += 1
+
+                    doc_len = len(json.load(
+                        open(f'{config.pdf_info_path}/{row['Domain']}/{best_chunk['doc_id']}_page_ranges.json')))
+                    P += 1 - (abs(best_chunk['page_number'] - int(row['Page_Num'])) / doc_len)
 
     return 0.5 * (A / N) + 0.25 * (D / N) + 0.25 * (P / N)
 

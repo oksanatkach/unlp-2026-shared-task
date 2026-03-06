@@ -54,12 +54,14 @@ def get_best_answer_from_logits(logits: torch.Tensor, valid_token_ids: List[int]
     option_mask[:, valid_token_ids] = True
     combined_mask = torch.isfinite(logits) & option_mask
     valid_logits = logits[combined_mask]
-    valid_indices = combined_mask.nonzero()
-    prompt_ids = valid_indices[:, 0].tolist()
-    token_ids = valid_indices[:, 1].tolist()
-    sorted_logits = valid_logits.argsort(descending=True).tolist()
-    best_element_ind = sorted_logits[0]
-    return prompt_ids[best_element_ind], token_ids[best_element_ind]
+    if valid_logits:
+        valid_indices = combined_mask.nonzero()
+        prompt_ids = valid_indices[:, 0].tolist()
+        token_ids = valid_indices[:, 1].tolist()
+        sorted_logits = valid_logits.argsort(descending=True).tolist()
+        best_element_ind = sorted_logits[0]
+        return prompt_ids[best_element_ind], token_ids[best_element_ind]
+    return
 
 
 def answer_question(row: Dict, top_k: int) -> Tuple[str, Dict]:
@@ -81,13 +83,17 @@ def answer_question(row: Dict, top_k: int) -> Tuple[str, Dict]:
         max_new_tokens=1
     )
     logits = outputs.scores[0]
-    best_chunk_id, best_token_id = get_best_answer_from_logits(logits, option_token_ids)
+    best_answer_result = get_best_answer_from_logits(logits, option_token_ids)
 
-    option_letter = tokenizer.convert_ids_to_tokens(best_token_id)
-    # todo: check tokenizer vocab to see if colon can ever be returned
-    option_letter = option_letter.strip().strip(':')
+    if best_answer_result:
 
-    return option_letter, top_chunks[best_chunk_id]
+        best_chunk_id, best_token_id = best_answer_result
+
+        option_letter = tokenizer.convert_ids_to_tokens(best_token_id)
+        # todo: check tokenizer vocab to see if colon can ever be returned
+        option_letter = option_letter.strip().strip(':')
+
+        return option_letter, top_chunks[best_chunk_id]
 
 
 def answer_question_yes_no(row: Dict, top_k: int) -> Tuple[str, Dict]:
@@ -111,12 +117,15 @@ def answer_question_yes_no(row: Dict, top_k: int) -> Tuple[str, Dict]:
     )
 
     logits = outputs.scores[0]
-    best_prompt_id, best_token_id = get_best_answer_from_logits(logits, yes_token_ids)
+    best_answer_result = get_best_answer_from_logits(logits, yes_token_ids)
 
-    option_letter = options_columns[best_prompt_id % len(options_columns)]
-    best_chunk = top_chunks[best_prompt_id // len(options_columns)]
+    if best_answer_result:
+        best_prompt_id, best_token_id = best_answer_result
 
-    return option_letter, best_chunk
+        option_letter = options_columns[best_prompt_id % len(options_columns)]
+        best_chunk = top_chunks[best_prompt_id // len(options_columns)]
+
+        return option_letter, best_chunk
 
 
 def answer_question_yes_no_logit_diff(row: Dict, top_k: int) -> Tuple[str, Dict]:
