@@ -1,4 +1,4 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 import torch
 import rank_bm25
 from typing import Dict, List, Tuple
@@ -26,7 +26,8 @@ def init():
         llm = AutoModelForCausalLM.from_pretrained(
             config.model_name,
             quantization_config=config.bnb_config,
-            device_map="cuda"
+            device_map="auto",
+            torch_dtype=torch.float32,
         )
 
     if tokenizer is None:
@@ -71,7 +72,7 @@ def answer_question(row: Dict, top_k: int) -> Tuple[str, Dict]:
     options = '\n'.join(options)
 
     prompts = [prompt_templates.prompt_template % (chunk['text'], question, options) for chunk in top_chunks]
-    tokens = tokenizer(prompts, return_tensors='pt', padding=True)
+    tokens = tokenizer(prompts, return_tensors='pt', padding=True).to("cuda")
 
     outputs = llm.generate(
         **tokens,
@@ -99,14 +100,16 @@ def answer_question_yes_no(row: Dict, top_k: int) -> Tuple[str, Dict]:
         for ind, chunk_dict in enumerate(top_chunks)
         for option_letter in options_columns
     ]
-    tokens = tokenizer(prompts, return_tensors='pt', padding=True)
+    tokens = tokenizer(prompts, return_tensors='pt', padding=True).to("cuda")
 
     outputs = llm.generate(
         **tokens,
         return_dict_in_generate=True,
         output_scores=True,
-        max_new_tokens=1
+        max_new_tokens=1,
+        do_sample=False,
     )
+
     logits = outputs.scores[0]
     best_prompt_id, best_token_id = get_best_answer_from_logits(logits, yes_token_ids)
 
@@ -114,6 +117,11 @@ def answer_question_yes_no(row: Dict, top_k: int) -> Tuple[str, Dict]:
     best_chunk = top_chunks[best_prompt_id // len(options_columns)]
 
     return option_letter, best_chunk
+
+
+def answer_question_yes_no_logit_diff(row: Dict, top_k: int) -> Tuple[str, Dict]:
+    # todo: test yes / no logit difference
+    pass
 
 
 if __name__ == '__main__':
