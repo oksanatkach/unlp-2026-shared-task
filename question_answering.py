@@ -54,7 +54,7 @@ def get_best_answer_from_logits(logits: torch.Tensor, valid_token_ids: List[int]
     option_mask[:, valid_token_ids] = True
     combined_mask = torch.isfinite(logits) & option_mask
     valid_logits = logits[combined_mask]
-    if valid_logits:
+    if valid_logits.numel() > 0:
         valid_indices = combined_mask.nonzero()
         prompt_ids = valid_indices[:, 0].tolist()
         token_ids = valid_indices[:, 1].tolist()
