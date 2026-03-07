@@ -79,7 +79,7 @@ def get_best_answer_from_logit_diff(logits: torch.Tensor) -> Tuple[int, int]:
         best_prompt_id = highest_diff_id // diff.shape[1]
         best_token_in_yes_token_ids = highest_diff_id % diff.shape[1]
         best_token_id = yes_token_ids[best_token_in_yes_token_ids]
-        return best_prompt_id.item(), best_token_id.item()
+        return best_prompt_id.item(), best_token_id
     return
 
 
