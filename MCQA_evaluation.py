@@ -95,9 +95,19 @@ if __name__ == '__main__':
                         type=str,
                         default=config.dev_questions_path,
                         help='Path to dev questions CSV')
+    parser.add_argument('--chunks_path',
+                        type=str,
+                        default=config.chunks_path,
+                        help='Path to retriever chunks')
+    parser.add_argument('--pdf_info_path',
+                        type=str,
+                        default=config.pdf_info_path,
+                        help='Path to pdf info files')
     args = parser.parse_args()
 
     config.QA_MODE = args.qa_mode
+    config.chunks_path = args.chunks_path
+    config.pdf_info_path = args.pdf_info_path
     dev_questions = csv.DictReader(open(args.dev_questions_path))
 
     if args.no_retriever:
