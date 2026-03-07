@@ -3,11 +3,18 @@ from typing import Iterable, Dict
 from tqdm import tqdm
 
 import config
-if config.YES_NO_QUESTIONS:
-    from question_answering import answer_question_yes_no as answer_question
-else:
-    from question_answering import answer_question
+
 from question_answering import init as QA_init
+from question_answering import (answer_question,
+                                answer_question_yes_no,
+                                answer_question_yes_no_logit_diff,
+                                answer_question_no_retriever)
+
+QA_mode_map = {
+    'REGULAR': answer_question,
+    'YES_NO_QUESTIONS': answer_question_yes_no,
+    'YES_NO_QUESTIONS_DIFF': answer_question_yes_no_logit_diff
+}
 
 
 def evaluate_pipeline(questions: Iterable[Dict], top_k: int = 5):
@@ -22,7 +29,7 @@ def evaluate_pipeline(questions: Iterable[Dict], top_k: int = 5):
 
     with tqdm(total=len(questions_list), desc="Evaluating", unit="row") as pbar:
         for row in questions_list:
-            answer = answer_question(row, top_k=top_k)
+            answer = QA_mode_map[config.QA_MODE](row, top_k=top_k)
             N += 1
 
             if answer:
@@ -43,11 +50,57 @@ def evaluate_pipeline(questions: Iterable[Dict], top_k: int = 5):
             pbar.set_postfix({"Answer acc:": f"{A / N:.2%}", "Doc acc:": f"{D / N:.2%}", "Page acc:": f"{P / N:.2%}"})  # live accuracy stats
 
     final_score = 0.5 * (A / N) + 0.25 * (D / N) + 0.25 * (P / N)
-    print(f'Final score: {final_score}')
+    print(f'Final score: {final_score:.2%}')
+
+
+def evaluate_no_retriever(questions: Iterable[Dict]):
+    QA_init()
+
+    A = 0
+    N = 0
+
+    questions_list = list(questions)
+
+    with tqdm(total=len(questions_list), desc="Evaluating", unit="row") as pbar:
+        for row in questions_list:
+            option_letter = answer_question_no_retriever(row)
+            N += 1
+
+            if option_letter:
+                if option_letter and row['Correct_Answer'] == option_letter:
+                    A += 1
+
+            pbar.update(1)
+            pbar.set_postfix({"Answer acc:": f"{A / N:.2%}"})
+
+    print(f'Final score: {A / N:.2%}')
 
 
 if __name__ == '__main__':
     import csv
+    import argparse
 
-    dev_questions = csv.DictReader(open(config.dev_questions_path))
-    evaluate_pipeline(dev_questions, config.RETRIEVER_TOP_K)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--qa_mode',
+                        type=str,
+                        default='REGULAR',
+                        choices=['REGULAR', 'YES_NO_QUESTIONS', 'YES_NO_QUESTIONS_DIFF'],
+                        help='QA mode to use')
+    parser.add_argument('--no_retriever',
+                        type=bool,
+                        default=False,
+                        action='store_true',
+                        help='Disable retriever')
+    parser.add_argument('--dev_questions_path',
+                        type=str,
+                        default=config.dev_questions_path,
+                        help='Path to dev questions CSV')
+    args = parser.parse_args()
+
+    config.QA_MODE = args.qa_mode
+    dev_questions = csv.DictReader(open(args.dev_questions_path))
+
+    if args.no_retriever:
+        evaluate_no_retriever(dev_questions)
+    else:
+        evaluate_pipeline(dev_questions, config.RETRIEVER_TOP_K)
