@@ -87,7 +87,6 @@ if __name__ == '__main__':
                         choices=['REGULAR', 'YES_NO_QUESTIONS', 'YES_NO_QUESTIONS_DIFF'],
                         help='QA mode to use')
     parser.add_argument('--no_retriever',
-                        type=bool,
                         default=False,
                         action='store_true',
                         help='Disable retriever')
