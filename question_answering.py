@@ -2,6 +2,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 import torch
 import rank_bm25
 from typing import Dict, List, Tuple
+import os
 
 import retriever
 import config
@@ -18,6 +19,8 @@ no_token_ids: List[str] | None = None
 
 
 def init():
+    os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
+
     global document_retriever, llm, tokenizer, option_token_ids, yes_token_ids, no_token_ids
 
     if document_retriever is None:
@@ -126,16 +129,19 @@ def answer_question_yes_no(row: Dict, top_k: int) -> Tuple[str, Dict]:
     ]
     tokens = tokenizer(prompts, return_tensors='pt', padding=True).to("cuda")
 
-    outputs = llm.generate(
-        **tokens,
-        return_dict_in_generate=True,
-        output_scores=True,
-        max_new_tokens=1,
-        do_sample=False,
-    )
+    with torch.inference_mode():
+        outputs = llm.generate(
+            **tokens,
+            return_dict_in_generate=True,
+            output_scores=True,
+            max_new_tokens=1,
+            do_sample=False,
+        )
 
     logits = outputs.scores[0]
     best_answer_result = get_best_answer_from_logits(logits, yes_token_ids)
+
+    torch.cuda.empty_cache()
 
     if best_answer_result:
         best_prompt_id, best_token_id = best_answer_result
