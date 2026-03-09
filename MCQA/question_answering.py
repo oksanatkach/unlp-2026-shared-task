@@ -126,7 +126,7 @@ def answer_question_yes_no(row: Dict, top_k: int) -> Tuple[str, Dict]:
         for option_letter in options_columns
     ]
 
-    CHUNK_SIZE = top_k
+    CHUNK_SIZE = 3
 
     all_logits = []
     for i in range(0, len(prompts), CHUNK_SIZE):
