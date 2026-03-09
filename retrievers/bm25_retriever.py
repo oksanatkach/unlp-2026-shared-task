@@ -4,7 +4,7 @@ import os
 import pickle
 import numpy as np
 
-from preprocessor import UkrainianPreprocessor
+from retrievers.preprocessor import UkrainianPreprocessor
 
 
 class BM25ChunkRetriever:

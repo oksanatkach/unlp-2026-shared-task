@@ -12,7 +12,7 @@ from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Tuple, Optional
 
-from preprocessor import UkrainianPreprocessor
+from retrievers.preprocessor import UkrainianPreprocessor
 
 
 def reciprocal_rank_fusion(
