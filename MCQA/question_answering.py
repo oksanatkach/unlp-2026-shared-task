@@ -1,14 +1,14 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
-import rank_bm25
 from typing import Dict, List, Tuple
 import os
 
 from conf import config
 from MCQA import prompt_templates
+from retrievers.hybrid_retriever import HybridRetriever
 
 options_columns = ['A', 'B', 'C', 'D', 'E', 'F']
-document_retriever: rank_bm25.BM25Okapi | None = None
+document_retriever: HybridRetriever | None = None
 llm : AutoModelForCausalLM | None = None
 tokenizer: AutoTokenizer | None = None
 option_token_ids: List[str] | None = None
@@ -22,7 +22,8 @@ def init():
     global document_retriever, llm, tokenizer, option_token_ids, yes_token_ids, no_token_ids
 
     if document_retriever is None:
-        document_retriever = retriever.init_retriever(config.chunks_path)
+        document_retriever = HybridRetriever(embedding_model=config.embedding_model_large)
+        document_retriever.load(config.hybrid_1000_e5large_retriever_path)
 
     if llm is None:
         llm = AutoModelForCausalLM.from_pretrained(
@@ -170,7 +171,7 @@ def answer_question_yes_no_logit_diff(row: Dict, top_k: int) -> Tuple[str, Dict]
         for option_letter in options_columns
     ]
 
-    CHUNK_SIZE = top_k
+    CHUNK_SIZE = 3
 
     all_logits = []
     for i in range(0, len(prompts), CHUNK_SIZE):

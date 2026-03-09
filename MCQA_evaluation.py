@@ -4,11 +4,11 @@ from tqdm import tqdm
 
 from conf import config
 
-from question_answering import init as QA_init
-from question_answering import (answer_question,
-                                answer_question_yes_no,
-                                answer_question_yes_no_logit_diff,
-                                answer_question_no_retriever)
+from MCQA.question_answering import init as QA_init
+from MCQA.question_answering import (answer_question,
+                                     answer_question_yes_no,
+                                     answer_question_yes_no_logit_diff,
+                                     answer_question_no_retriever)
 
 QA_mode_map = {
     'REGULAR': answer_question,
