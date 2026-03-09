@@ -128,7 +128,7 @@ def answer_question_yes_no(row: Dict, top_k: int) -> Tuple[str, Dict]:
         for option_letter in options_columns
     ]
 
-    CHUNK_SIZE = int(len(prompts) / len(options_columns))
+    CHUNK_SIZE = top_k
 
     all_logits = []
     for i in range(0, len(prompts), CHUNK_SIZE):
@@ -144,11 +144,12 @@ def answer_question_yes_no(row: Dict, top_k: int) -> Tuple[str, Dict]:
                 do_sample=False,
             )
 
-        all_logits.append(outputs.scores[0])  # [chunk_size, vocab_size]
+        all_logits.append(outputs.scores[0].cpu())  # [chunk_size, vocab_size]
+
+        del outputs, tokens
         torch.cuda.empty_cache()
 
     logits = torch.cat(all_logits, dim=0)
-
     best_answer_result = get_best_answer_from_logits(logits, yes_token_ids)
 
     if best_answer_result:
@@ -171,7 +172,7 @@ def answer_question_yes_no_logit_diff(row: Dict, top_k: int) -> Tuple[str, Dict]
         for option_letter in options_columns
     ]
 
-    CHUNK_SIZE = int(len(prompts) / len(options_columns))
+    CHUNK_SIZE = top_k
 
     all_logits = []
     for i in range(0, len(prompts), CHUNK_SIZE):
@@ -187,7 +188,9 @@ def answer_question_yes_no_logit_diff(row: Dict, top_k: int) -> Tuple[str, Dict]
                 do_sample=False,
             )
 
-        all_logits.append(outputs.scores[0])  # [chunk_size, vocab_size]
+        all_logits.append(outputs.scores[0].cpu())  # [chunk_size, vocab_size]
+
+        del outputs, tokens
         torch.cuda.empty_cache()
 
     logits = torch.cat(all_logits, dim=0)
