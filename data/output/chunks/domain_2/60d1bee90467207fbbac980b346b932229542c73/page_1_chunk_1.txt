@@ -1,7 +1,0 @@
-Протимікробні засоби для системного застосування.
-Фторхінолони. Код АТХ J01M A01.
-Фармакологічні властивості.
-Фармакодинаміка.
-Антимікробний засіб групи фторхінолонів широкого спектра дії. Бактерицидна дія офлоксацину пов’язана з блокадою ферменту ДНК-гірази бактерій. Високоактивний відносно більшості грамнегативних бактерій: Escherichia coli, Salmonella spp., Shigella spp.,
-Proteus spp., Morganella morganii, Klebsiella spp. (у тому числі Klebsiella pneumoniae),
-Enterobacter spp., Serratia spp., Citrobacter spp., Yersinia spp.,Providencia spp., Haemophilus influenzae, Neisseria gonorrhoeae, Neisseria meningitidis, Mycoplasma spp., Legionella pneumophila,Acinetobacter spp., а також Chlamydia spp.

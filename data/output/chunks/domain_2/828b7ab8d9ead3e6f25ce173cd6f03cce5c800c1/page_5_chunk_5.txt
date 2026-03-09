@@ -1,8 +1,0 @@
-Грам негативні:
-Аероби - Haemophilus influenzae*, Moraxella catarrhalis* (Branhamella catarrhalis),
-Escherichia coli*, Proteus mirabilis, Proteus vulgaris*, Klebsiella species*, Salmonella species*,
-Shigella species*, Bordetella pertussis, Brucella species, Neisseria gonorrhoeae*, Neisseria meningitidis*, Vibrio cholerae, Pasteurella multocida;
-Анаероб - Bacteroides species*( включаючи B.fragilis).
-*Деякі представники цих видів бактерій виробляють β-лактамазу, що робить їх несприйнятливими до амоксициліну.
-Фармакокінетика. Після прийому внутрішньо обидва компоненти добре абсорбуються, пікова концентрація в сироватці крові настає через одну годину після прийому.
-Амоксикомб найефективніший, коли приймають його перед їдою.

@@ -2,7 +2,7 @@ import json
 from typing import Iterable, Dict
 from tqdm import tqdm
 
-import config
+from conf import config
 
 from question_answering import init as QA_init
 from question_answering import (answer_question,

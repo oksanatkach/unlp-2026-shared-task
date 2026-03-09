@@ -10,14 +10,19 @@ def get_page_chunks(doc_text, page_ranges, page_number, max_chunk_size=500, over
     start, end = page_ranges[page_number]
     page_text = doc_text[start:end]
 
-    next_page_fist_paragraph = ''
+    prev_page_last_paragraph = ''
+    next_page_first_paragraph = ''
     if page_number+1 in page_ranges:
         start, end = page_ranges[page_number+1]
         next_page_text = doc_text[start:end]
-        # todo: also add previous page last paragraph
-        next_page_fist_paragraph = next_page_text.split('\n')[0]
+        next_page_first_paragraph = next_page_text.strip('\n').split('\n')[0]
 
-    text = page_text + next_page_fist_paragraph
+    if page_number-1 in page_ranges:
+        start, end = page_ranges[page_number-1]
+        prev_page_text = doc_text[start:end]
+        prev_page_last_paragraph = prev_page_text.strip('\n').split('\n')[-1]
+
+    text = prev_page_last_paragraph + page_text + next_page_first_paragraph
 
     doc = nlp(text)
     sents = list(doc.sents)
@@ -35,7 +40,7 @@ def get_page_chunks(doc_text, page_ranges, page_number, max_chunk_size=500, over
         else:
             chunk_text = ''
 
-        # if chunk is within limits, add the next sentence and check again
+        # if within limits, add the next sentence
         if len(chunk_text) + len(sent.text) < max_chunk_size:
             chunk.append(sent)
             ind += 1
@@ -50,28 +55,35 @@ def get_page_chunks(doc_text, page_ranges, page_number, max_chunk_size=500, over
 
         else:
             # if chunk is entirely from the next page: do not write it, stop loop
-            if chunk_text in next_page_fist_paragraph:
+            if chunk_text in next_page_first_paragraph:
                 chunk = []
                 break
 
             # chunk has reached limit, write
             chunks.append(chunk_text)
 
-            # if chunk contained multiple sentences, write previous sentence to chunk: overlap is one sentence
+            # if chunk contained multiple sentences, write previous sentences to chunk
             # do not increment, check combination with current sentence
             if len(chunk) > 1:
-                #todo: check this
-                chunk = sents[ind-overlap:ind-1]
-            # if the chunk had a single sentence it means it was too long to combine with the current
-            # do not increment to check the current sentence
+                actual_overlap = overlap
+                while actual_overlap > 0:
+                    overlap_chunk = sents[max(0, ind - actual_overlap):ind]
+                    overlap_text = text[overlap_chunk[0].start_char: overlap_chunk[-1].end_char]
+                    if len(overlap_text) + len(sent.text) < max_chunk_size:
+                        chunk = overlap_chunk
+                        break
+                    actual_overlap -= 1
+                else:
+                    # no overlap fits at all, start fresh
+                    chunk = []
             else:
                 chunk = [sent]
                 ind += 1
 
     if chunk:
         # this should never happen but just in case someone removes next page paragraph
-        chunk_text = (text[chunk[0].start_char: chunk[-1].end_char])
-        if chunk_text not in next_page_fist_paragraph:
+        chunk_text = text[chunk[0].start_char: chunk[-1].end_char]
+        if chunk_text not in next_page_first_paragraph:
             chunks.append(chunk_text)
 
     return chunks
@@ -91,11 +103,10 @@ if __name__ == '__main__':
     # domain = 'domain_1'
     domain = 'domain_2'
     pdf_path = f'../data/{domain}/dev'
-    pdf_path = f'../data/{domain}/dev'
     pdf_info_path = f'../data/output/pdf_info/{domain}'
-    chunks_output_path = f'../data/output/chunks/{domain}'
-    max_chunk_size = 800
+    max_chunk_size = 1000
     sentence_overlap = 2
+    chunks_output_path = f'../data/output/chunks_{max_chunk_size}/{domain}'
 
     for file in os.listdir(pdf_path):
         if file.endswith('.pdf'):
@@ -121,4 +132,3 @@ if __name__ == '__main__':
                                       page_number=page_number,
                                       max_chunk_size=max_chunk_size,
                                       overlap=sentence_overlap)
-            # break
