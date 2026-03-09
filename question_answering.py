@@ -128,19 +128,6 @@ def answer_question_yes_no(row: Dict, top_k: int) -> Tuple[str, Dict]:
         for option_letter in options_columns
     ]
 
-    # tokens = tokenizer(prompts, return_tensors='pt', padding=True).to("cuda")
-
-    # with torch.inference_mode():
-    #     outputs = llm.generate(
-    #         **tokens,
-    #         return_dict_in_generate=True,
-    #         output_scores=True,
-    #         max_new_tokens=1,
-    #         do_sample=False,
-    #     )
-    #
-    # logits = outputs.scores[0]
-
     CHUNK_SIZE = int(len(prompts) / len(options_columns))
 
     all_logits = []
@@ -183,17 +170,28 @@ def answer_question_yes_no_logit_diff(row: Dict, top_k: int) -> Tuple[str, Dict]
         for ind, chunk_dict in enumerate(top_chunks)
         for option_letter in options_columns
     ]
-    tokens = tokenizer(prompts, return_tensors='pt', padding=True).to("cuda")
 
-    outputs = llm.generate(
-        **tokens,
-        return_dict_in_generate=True,
-        output_scores=True,
-        max_new_tokens=1,
-        do_sample=False,
-    )
+    CHUNK_SIZE = int(len(prompts) / len(options_columns))
 
-    logits = outputs.scores[0]
+    all_logits = []
+    for i in range(0, len(prompts), CHUNK_SIZE):
+        chunk = prompts[i:i + CHUNK_SIZE]
+        tokens = tokenizer(chunk, return_tensors='pt', padding=True).to("cuda")
+
+        with torch.inference_mode():
+            outputs = llm.generate(
+                **tokens,
+                return_dict_in_generate=True,
+                output_scores=True,
+                max_new_tokens=1,
+                do_sample=False,
+            )
+
+        all_logits.append(outputs.scores[0])  # [chunk_size, vocab_size]
+        torch.cuda.empty_cache()
+
+    logits = torch.cat(all_logits, dim=0)
+
     best_answer_result = get_best_answer_from_logit_diff(logits)
 
     if best_answer_result:
