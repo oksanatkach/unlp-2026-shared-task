@@ -88,7 +88,8 @@ def get_best_answer_from_logit_diff(logits: torch.Tensor) -> Tuple[int, int]:
 def answer_question(row: Dict, top_k: int) -> Tuple[str, Dict]:
     question = row['Question']
     options = [row[letter] for letter in options_columns if row[letter]]
-    top_chunks = document_retriever.retrieve_chunks(question, options, top_k=top_k)
+    query = question if not options else (question + " " + "\n".join(options))
+    top_chunks = document_retriever.search(query, top_k=top_k)
 
     options = zip(options_columns[:len(options)], options)
     options = [': '.join(el) for el in options]
@@ -119,7 +120,9 @@ def answer_question(row: Dict, top_k: int) -> Tuple[str, Dict]:
 def answer_question_yes_no(row: Dict, top_k: int) -> Tuple[str, Dict]:
     question = row['Question']
     options = [row[letter] for letter in options_columns if row[letter]]
-    top_chunks = document_retriever.retrieve_chunks(question, options, top_k=top_k)
+    query = question if not options else (question + " " + "\n".join(options))
+    top_chunks = document_retriever.search(query, top_k=top_k)
+
 
     prompts = [
         prompt_templates.prompt_template_yes_no % (chunk_dict["text"], question, row[option_letter])
@@ -163,7 +166,9 @@ def answer_question_yes_no(row: Dict, top_k: int) -> Tuple[str, Dict]:
 def answer_question_yes_no_logit_diff(row: Dict, top_k: int) -> Tuple[str, Dict]:
     question = row['Question']
     options = [row[letter] for letter in options_columns if row[letter]]
-    top_chunks = document_retriever.retrieve_chunks(question, options, top_k=top_k)
+    query = question if not options else (question + " " + "\n".join(options))
+    top_chunks = document_retriever.search(query, top_k=top_k)
+
 
     prompts = [
         prompt_templates.prompt_template_yes_no % (chunk_dict["text"], question, row[option_letter])
