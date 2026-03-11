@@ -5,11 +5,12 @@ from tqdm import tqdm
 from conf import config
 
 from MCQA.question_answering import init as QA_init
-from MCQA.question_answering import answer_question
+from MCQA.question_answering import (answer_question_prompt_per_chunk,
+                                     answer_question_single_prompt)
 
 QA_mode_map = {
-    'REGULAR': answer_question,
-    # 'YES_NO_QUESTIONS': answer_question_yes_no,
+    'prompt_per_chunk': answer_question_prompt_per_chunk,
+    'single_prompt': answer_question_single_prompt,
     # 'YES_NO_QUESTIONS_DIFF': answer_question_yes_no_logit_diff
 }
 

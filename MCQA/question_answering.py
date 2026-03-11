@@ -46,7 +46,7 @@ def init():
         option_token_ids = torch.tensor(option_token_ids, device='cpu')
 
 
-def answer_question(row: Dict, top_k: int) -> Tuple[str, Dict]:
+def answer_question_prompt_per_chunk(row: Dict, top_k: int) -> Tuple[str, Dict]:
     question = row['Question']
     options = [row[letter] for letter in options_columns if row[letter]]
     query = question + " " + "\n".join(options)
@@ -84,3 +84,28 @@ def answer_question(row: Dict, top_k: int) -> Tuple[str, Dict]:
     best_chunk = top_chunks[min(winning_indices)]
 
     return answer_letter, best_chunk
+
+
+def answer_question_single_prompt(row: Dict, top_k: int) -> Tuple[str, Dict]:
+    question = row['Question']
+    options = [row[letter] for letter in options_columns if row[letter]]
+    query = question + " " + "\n".join(options)
+    top_chunks = document_retriever.search(query, top_k=top_k)
+    all_chunks_text = '\n\n'.join([chunk['text'] for chunk in top_chunks])
+
+    options_labeled = '\n'.join([': '.join(el) for el in zip(options_columns[:len(options)], options)])
+
+    prompt = prompt_templates.prompt_template % (all_chunks_text, question, options_labeled)
+
+    tokens = tokenizer(prompt, return_tensors='pt', padding=True).to("cuda")
+
+    with torch.no_grad():
+        outputs = llm(**tokens)
+
+    next_token_logits = outputs.logits[:, -1, :].to("cpu")
+    selected_logits = next_token_logits[:, option_token_ids]
+    best_option_idx = selected_logits.argmax(dim=-1)
+    best_token_ids = option_token_ids[best_option_idx]
+    answer_letter = tokenizer.convert_ids_to_tokens(best_token_ids)[0].strip()
+
+    return answer_letter, top_chunks[0]
