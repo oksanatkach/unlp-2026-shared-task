@@ -64,7 +64,7 @@ def answer_question(row: Dict, top_k: int) -> Tuple[str, Dict]:
     with torch.no_grad():
         outputs = llm(**tokens)
 
-    next_token_logits = outputs.logits[:, -1, :]
+    next_token_logits = outputs.logits[:, -1, :].to("cpu")
     selected_logits = next_token_logits[:, option_token_ids]
     best_option_idx = selected_logits.argmax(dim=-1)
     best_token_ids = option_token_ids[best_option_idx]
