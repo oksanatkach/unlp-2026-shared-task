@@ -6,12 +6,13 @@ from conf import config
 
 from MCQA.question_answering import init as QA_init
 from MCQA.question_answering import (answer_question_prompt_per_chunk,
-                                     answer_question_single_prompt)
+                                     answer_question_single_prompt,
+                                     answer_question_prompt_per_chunk_per_option)
 
 QA_mode_map = {
     'prompt_per_chunk': answer_question_prompt_per_chunk,
     'single_prompt': answer_question_single_prompt,
-    # 'YES_NO_QUESTIONS_DIFF': answer_question_yes_no_logit_diff
+    'prompt_per_chunk_per_option': answer_question_prompt_per_chunk_per_option
 }
 
 
