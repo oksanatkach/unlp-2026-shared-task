@@ -1,6 +1,6 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Option
 import os
 
 from conf import config
@@ -12,14 +12,12 @@ document_retriever: HybridRetriever | None = None
 llm : AutoModelForCausalLM | None = None
 tokenizer: AutoTokenizer | None = None
 option_token_ids: List[str] | None = None
-yes_token_ids: List[str] | None = None
-no_token_ids: List[str] | None = None
 
 
 def init():
     os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
 
-    global document_retriever, llm, tokenizer, option_token_ids, yes_token_ids, no_token_ids
+    global document_retriever, llm, tokenizer, option_token_ids
 
     if document_retriever is None:
         document_retriever = HybridRetriever(embedding_model=config.embedding_model_large)
@@ -45,47 +43,22 @@ def init():
                                                             'F' '▁F',
                                                             ])
 
-    if yes_token_ids is None:
-        yes_token_ids = tokenizer.convert_tokens_to_ids(['yes', '▁yes',
-                                                         'Yes', '▁Yes',
-                                                         'YES', '▁YES'
-                                                         ])
-        no_token_ids = tokenizer.convert_tokens_to_ids(['no', '▁no',
-                                                        'No', '▁No',
-                                                        'NO', '▁NO'
-                                                        ])
 
-
-def get_best_answer_from_logits(logits: torch.Tensor, valid_token_ids: List[int]) -> Tuple[int, int]:
+def get_best_answer_from_logits(logits: torch.Tensor, valid_token_ids: List[int])\
+        -> Tuple[Option[int, None], Option[int, None]]:
     option_mask = torch.zeros_like(logits, dtype=torch.bool)
     option_mask[:, valid_token_ids] = True
-    combined_mask = torch.isfinite(logits) & option_mask
-    valid_logits = logits[combined_mask]
+    valid_logits = logits[option_mask]
     if valid_logits.numel() > 0:
-        valid_indices = combined_mask.nonzero()
-        prompt_ids = valid_indices[:, 0].tolist()
+        valid_indices = option_mask.nonzero()
         token_ids = valid_indices[:, 1].tolist()
-        sorted_logits = valid_logits.argsort(descending=True).tolist()
-        best_element_ind = sorted_logits[0]
-        return prompt_ids[best_element_ind], token_ids[best_element_ind]
-    return
+        sorted_logits_ids = valid_logits.argsort(descending=True).tolist()
+        best_element_ind = sorted_logits_ids[0]
+        return token_ids[best_element_ind], valid_logits[best_element_ind].item()
+    return None, None
 
 
-def get_best_answer_from_logit_diff(logits: torch.Tensor) -> Tuple[int, int]:
-    yes_logits = logits[:, yes_token_ids]
-    no_logits = logits[:, no_token_ids]
-    diff = yes_logits - no_logits
-
-    if diff.numel() > 0:
-        highest_diff_id = diff.argmax()
-        best_prompt_id = highest_diff_id // diff.shape[1]
-        best_token_in_yes_token_ids = highest_diff_id % diff.shape[1]
-        best_token_id = yes_token_ids[best_token_in_yes_token_ids]
-        return best_prompt_id.item(), best_token_id
-    return
-
-
-def answer_question(row: Dict, top_k: int) -> Tuple[str, Dict]:
+def answer_question(row: Dict, top_k: int) -> Tuple[Option[str, None], Option[Dict, None]]:
     question = row['Question']
     options = [row[letter] for letter in options_columns if row[letter]]
     query = question if not options else (question + " " + "\n".join(options))
@@ -105,145 +78,27 @@ def answer_question(row: Dict, top_k: int) -> Tuple[str, Dict]:
         max_new_tokens=1
     )
     logits = outputs.scores[0]
-    best_answer_result = get_best_answer_from_logits(logits, option_token_ids)
 
-    if best_answer_result:
+    # Step 1: for each chunk, independently get the best answer letter + its logit
+    votes = {}  # letter -> list of logits
+    chunk_votes = []  # per-chunk: (letter, logit)
 
-        best_chunk_id, best_token_id = best_answer_result
+    for chunk_idx in range(logits.shape[0]):
+        chunk_logits = logits[chunk_idx].unsqueeze(0)
+        token_id, token_logit = get_best_answer_from_logits(chunk_logits, option_token_ids)
+        if token_id:
+            letter = tokenizer.convert_ids_to_tokens(token_id).strip()
+            chunk_votes.append((letter, token_logit, top_chunks[chunk_idx]))
+            votes.setdefault(letter, []).append(token_logit)
 
-        option_letter = tokenizer.convert_ids_to_tokens(best_token_id)
-        option_letter = option_letter.strip().strip(':')
+    if not chunk_votes:
+        return None, None
 
-        return option_letter, top_chunks[best_chunk_id]
+    # Step 2: pick answer by majority vote, break ties by sum of logits
+    best_letter = max(votes, key=lambda l: (len(votes[l]), sum(votes[l])))
 
+    # Step 3: attribute page to the chunk that voted for the winning answer with highest confidence
+    winning_votes = [(logit, chunk) for letter, logit, chunk in chunk_votes if letter == best_letter]
+    best_logit, best_chunk = max(winning_votes, key=lambda x: x[0])
 
-def answer_question_yes_no(row: Dict, top_k: int) -> Tuple[str, Dict]:
-    question = row['Question']
-    options = [row[letter] for letter in options_columns if row[letter]]
-    query = question if not options else (question + " " + "\n".join(options))
-    top_chunks = document_retriever.search(query, top_k=top_k)
-
-
-    prompts = [
-        prompt_templates.prompt_template_yes_no % (chunk_dict["text"], question, row[option_letter])
-        for ind, chunk_dict in enumerate(top_chunks)
-        for option_letter in options_columns
-    ]
-
-    CHUNK_SIZE = 3
-
-    all_logits = []
-    for i in range(0, len(prompts), CHUNK_SIZE):
-        chunk = prompts[i:i + CHUNK_SIZE]
-        tokens = tokenizer(chunk, return_tensors='pt', padding=True).to("cuda")
-
-        with torch.inference_mode():
-            outputs = llm.generate(
-                **tokens,
-                return_dict_in_generate=True,
-                output_scores=True,
-                max_new_tokens=1,
-                do_sample=False,
-            )
-
-        all_logits.append(outputs.scores[0].cpu())  # [chunk_size, vocab_size]
-
-        del outputs, tokens
-        torch.cuda.empty_cache()
-
-    logits = torch.cat(all_logits, dim=0)
-    best_answer_result = get_best_answer_from_logits(logits, yes_token_ids)
-
-    if best_answer_result:
-        best_prompt_id, best_token_id = best_answer_result
-
-        option_letter = options_columns[best_prompt_id % len(options_columns)]
-        best_chunk = top_chunks[best_prompt_id // len(options_columns)]
-
-        return option_letter, best_chunk
-
-
-def answer_question_yes_no_logit_diff(row: Dict, top_k: int) -> Tuple[str, Dict]:
-    question = row['Question']
-    options = [row[letter] for letter in options_columns if row[letter]]
-    query = question if not options else (question + " " + "\n".join(options))
-    top_chunks = document_retriever.search(query, top_k=top_k)
-
-
-    prompts = [
-        prompt_templates.prompt_template_yes_no % (chunk_dict["text"], question, row[option_letter])
-        for ind, chunk_dict in enumerate(top_chunks)
-        for option_letter in options_columns
-    ]
-
-    CHUNK_SIZE = 3
-
-    all_logits = []
-    for i in range(0, len(prompts), CHUNK_SIZE):
-        chunk = prompts[i:i + CHUNK_SIZE]
-        tokens = tokenizer(chunk, return_tensors='pt', padding=True).to("cuda")
-
-        with torch.inference_mode():
-            outputs = llm.generate(
-                **tokens,
-                return_dict_in_generate=True,
-                output_scores=True,
-                max_new_tokens=1,
-                do_sample=False,
-            )
-
-        all_logits.append(outputs.scores[0].cpu())  # [chunk_size, vocab_size]
-
-        del outputs, tokens
-        torch.cuda.empty_cache()
-
-    logits = torch.cat(all_logits, dim=0)
-
-    best_answer_result = get_best_answer_from_logit_diff(logits)
-
-    if best_answer_result:
-        best_prompt_id, best_token_id = best_answer_result
-
-        option_letter = options_columns[best_prompt_id % len(options_columns)]
-        best_chunk = top_chunks[best_prompt_id // len(options_columns)]
-
-        return option_letter, best_chunk
-
-
-def answer_question_no_retriever(row: Dict) -> Tuple[str, Dict]:
-    question = row['Question']
-    options = [row[letter] for letter in options_columns if row[letter]]
-    options = zip(options_columns[:len(options)], options)
-    options = [': '.join(el) for el in options]
-    options = '\n'.join(options)
-
-    prompt = prompt_templates.prompt_template_no_retriever % (question, options)
-    tokens = tokenizer(prompt, return_tensors='pt', padding=True).to("cuda")
-
-    output = llm.generate(
-        **tokens,
-        return_dict_in_generate=True,
-        output_scores=True,
-        max_new_tokens=1
-    )
-    logits = output.scores[0]
-    best_answer_result = get_best_answer_from_logits(logits, option_token_ids)
-
-    if best_answer_result:
-
-        _, best_token_id = best_answer_result
-
-        option_letter = tokenizer.convert_ids_to_tokens(best_token_id)
-        option_letter = option_letter.strip().strip(':')
-
-        return option_letter
-
-
-if __name__ == '__main__':
-    import csv
-
-    init()
-
-    dev_questions = csv.DictReader(open(config.dev_questions_path))
-    print(answer_question(next(dev_questions), top_k=config.RETRIEVER_TOP_K))
-    # {'Question_ID': '0', 'Domain': 'domain_2', 'N_Pages': '5', 'Question': 'Як рекомендовано приймати ретаболіл дорослим?', 'A': 'внутрішньо', 'B': 'підшкірно', 'C': 'орально', 'D': 'внутрішньовенно', 'E': 'внутрішньом’язово', 'F': 'інгаляційно', 'Correct_Answer': 'E', 'Doc_ID': '4e779acee13fa6e0763fb33d1c83030b8e6ea33d.pdf', 'Page_Num': '1'}
+    return best_letter, best_chunk
