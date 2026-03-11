@@ -1,6 +1,6 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
-from typing import Dict, List, Tuple, Option
+from typing import Dict, List, Tuple
 import os
 
 from conf import config
@@ -45,7 +45,7 @@ def init():
 
 
 def get_best_answer_from_logits(logits: torch.Tensor, valid_token_ids: List[int])\
-        -> Tuple[Option[int, None], Option[int, None]]:
+        -> Tuple[int | None, int | None]:
     option_mask = torch.zeros_like(logits, dtype=torch.bool)
     option_mask[:, valid_token_ids] = True
     valid_logits = logits[option_mask]
@@ -58,7 +58,7 @@ def get_best_answer_from_logits(logits: torch.Tensor, valid_token_ids: List[int]
     return None, None
 
 
-def answer_question(row: Dict, top_k: int) -> Tuple[Option[str, None], Option[Dict, None]]:
+def answer_question(row: Dict, top_k: int) -> Tuple[str | None, Dict | None]:
     question = row['Question']
     options = [row[letter] for letter in options_columns if row[letter]]
     query = question if not options else (question + " " + "\n".join(options))
