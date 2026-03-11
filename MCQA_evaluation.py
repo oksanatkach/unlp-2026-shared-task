@@ -5,15 +5,12 @@ from tqdm import tqdm
 from conf import config
 
 from MCQA.question_answering import init as QA_init
-from MCQA.question_answering import (answer_question,
-                                     answer_question_yes_no,
-                                     answer_question_yes_no_logit_diff,
-                                     answer_question_no_retriever)
+from MCQA.question_answering import answer_question
 
 QA_mode_map = {
     'REGULAR': answer_question,
-    'YES_NO_QUESTIONS': answer_question_yes_no,
-    'YES_NO_QUESTIONS_DIFF': answer_question_yes_no_logit_diff
+    # 'YES_NO_QUESTIONS': answer_question_yes_no,
+    # 'YES_NO_QUESTIONS_DIFF': answer_question_yes_no_logit_diff
 }
 
 
