@@ -57,10 +57,8 @@ def answer_question(row: Dict, top_k: int) -> Tuple[str, Dict]:
     # ── Step 1: get answer via voting (your current method) ──
     prompts = [prompt_templates.prompt_template % (chunk['text'], question, options_labeled) for chunk in top_chunks]
 
-    # also add a no-context prompt as baseline
-    prompts_with_baseline = prompts + [prompt_templates.no_context_template % (question, options_labeled)]
+    tokens = tokenizer(prompts, return_tensors='pt', padding=True).to("cuda")
 
-    tokens = tokenizer(prompts_with_baseline, return_tensors='pt', padding=True).to("cuda")
     with torch.no_grad():
         outputs = llm(**tokens)
 
@@ -71,36 +69,18 @@ def answer_question(row: Dict, top_k: int) -> Tuple[str, Dict]:
     best_logits = selected_logits[torch.arange(selected_logits.shape[0]), best_option_idx]
     option_letters = [token.strip() for token in tokenizer.convert_ids_to_tokens(best_token_ids)]
 
-    # voting on chunks only (exclude baseline at index -1)
-    chunk_letters = option_letters[:-1]
-    chunk_logits = best_logits[:-1]
-    baseline_logits = selected_logits[-1]  # full distribution for baseline
-
-    option_counter = Counter(chunk_letters)
+    option_counter = Counter(option_letters)
     max_count = max(option_counter.values())
     top_letters = [l for l, c in option_counter.items() if c == max_count]
     answer_letter = (
         top_letters[0] if len(top_letters) == 1
         else max(top_letters, key=lambda l: sum(
-            chunk_logits[i].item() for i, ol in enumerate(chunk_letters) if ol == l
+            best_logits[i].item() for i, ol in enumerate(option_letters) if ol == l
         ))
     )
 
-    # ── Step 2: attribute page by logit lift over baseline ──
-    winning_letter_token = option_token_ids[
-        [tokenizer.convert_ids_to_tokens(t.item()).strip() for t in option_token_ids].index(answer_letter)
-    ]
-    baseline_logit_for_answer = baseline_logits[
-        (option_token_ids == winning_letter_token).nonzero()[0]
-    ].item()
-
-    # chunk that most increases confidence in the answer vs baseline
-    best_chunk_idx = max(
-        range(len(top_chunks)),
-        key=lambda i: selected_logits[i][
-                          (option_token_ids == winning_letter_token).nonzero()[0]
-                      ].item() - baseline_logit_for_answer
-    )
-    best_chunk = top_chunks[best_chunk_idx]
+    # ── Step 2: find best chunk ──
+    winning_indices = [i for i, ol in enumerate(option_letters) if ol == answer_letter]
+    best_chunk = top_chunks[min(winning_indices)]
 
     return answer_letter, best_chunk
