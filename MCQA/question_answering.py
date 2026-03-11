@@ -146,7 +146,8 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, top_k: int) -> Tuple[
         with torch.no_grad():
             outputs = llm(**tokens)
 
-        next_token_logits = outputs.logits[:, -1, :]
+        next_token_logits = outputs.logits[:, -1, :].to("cpu")
+        del outputs
         yes_logits = next_token_logits[:, yes_token_id]
         no_logits = next_token_logits[:, no_token_id]
         margins = yes_logits - no_logits  # (top_k,)
