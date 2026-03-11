@@ -104,4 +104,3 @@ def answer_question(row: Dict, top_k: int) -> Tuple[str, Dict]:
     best_chunk = top_chunks[best_chunk_idx]
 
     return answer_letter, best_chunk
-git
