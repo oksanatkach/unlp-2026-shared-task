@@ -89,7 +89,7 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, top_k: int) -> Tuple[
         llm.generate(formatted, sampling_params)
 
         captured = json.load(open(config.captured_logits_tmp_path))
-        captured = torch.tensor(captured, device='cpu')
+        captured = torch.tensor(captured)
 
         yes_logits = captured[:, 0]
         no_logits = captured[:, 1]
