@@ -71,8 +71,6 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, top_k: int) -> Tuple[
     query = question + " " + "\n".join(options)
     top_chunks = document_retriever.search(query, top_k=top_k)
 
-    options_labeled = [': '.join(el) for el in zip(options_columns[:len(options)], options)]
-
     # this is to make sure the next token logit will be option letter, not a space token
     if not prompt_templates.prompt_template_yes_no.endswith(' '):
         prompt_templates.prompt_template_yes_no += ' '
@@ -80,21 +78,21 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, top_k: int) -> Tuple[
     option_scores = []
     option_chunk_margins = []  # per-option, per-chunk margins
 
-    for option in options_labeled:
+    for option in options:
         prompts = [prompt_templates.prompt_template_yes_no % (chunk['text'], question, option) for chunk in top_chunks]
-        formatted = [tokenizer.apply_chat_template(
-            [{"role": "user", "content": prompt}],
+        formatted = tokenizer.apply_chat_template(
+            [[{"role": "user", "content": prompt}] for prompt in prompts],
             tokenize=False,
             add_generation_prompt=True
-            )
-            for prompt in prompts]
+        )
 
         llm.generate(formatted, sampling_params)
 
         captured = json.load(open(config.captured_logits_tmp_path))
+        captured = torch.tensor(captured, device='cpu')
 
-        yes_logits = torch.tensor(captured[0], device='cpu')
-        no_logits = torch.tensor(captured[1], device='cpu')
+        yes_logits = captured[:, 0]
+        no_logits = captured[:, 1]
         margins = yes_logits - no_logits  # (top_k,)
 
         option_scores.append(margins.max().item())
