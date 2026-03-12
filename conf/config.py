@@ -4,6 +4,7 @@ import os
 
 
 QA_MODE = os.getenv('QA_MODE') or 'REGULAR'
+USE_VLLM = os.getenv('USE_VLLM') or False
 RETRIEVER_TOP_K = os.getenv('RETRIEVER_TOP_K') or 5
 dev_questions_path = os.getenv('DEV_QUESTIONS_PATH') or '../data/dev_questions.csv'
 chunks_800_path = os.getenv('CHUNKS_PATH') or '../data/output/chunks_800'
@@ -42,3 +43,5 @@ embedding_model_base = 'intfloat/multilingual-e5-base'
 embedding_model_large = 'intfloat/multilingual-e5-large'
 
 model_name = os.getenv('MODEL_NAME') or 'lapa-llm/lapa-v0.1.2-instruct'
+
+captured_logits_tmp_path = '/tmp/captured_logits.json'

@@ -4,10 +4,14 @@ from tqdm import tqdm
 
 from conf import config
 
-from MCQA.question_answering import init as QA_init
-from MCQA.question_answering import (answer_question_prompt_per_chunk,
-                                     answer_question_single_prompt,
-                                     answer_question_prompt_per_chunk_per_option)
+if config.USE_VLLM == 'True':
+    from MCQA.question_answering_vllm import init as QA_init
+    from MCQA.question_answering_vllm import answer_question_prompt_per_chunk_per_option
+else:
+    from MCQA.question_answering import init as QA_init
+    from MCQA.question_answering import (answer_question_prompt_per_chunk,
+                                         answer_question_single_prompt,
+                                         answer_question_prompt_per_chunk_per_option)
 
 QA_mode_map = {
     'prompt_per_chunk': answer_question_prompt_per_chunk,
@@ -85,6 +89,10 @@ if __name__ == '__main__':
                         default='REGULAR',
                         choices=['REGULAR', 'YES_NO_QUESTIONS', 'YES_NO_QUESTIONS_DIFF'],
                         help='QA mode to use')
+    parser.add_argument('--vllm',
+                        default=False,
+                        action='store_true',
+                        help='Enable VLLM')
     parser.add_argument('--no_retriever',
                         default=False,
                         action='store_true',
@@ -103,6 +111,7 @@ if __name__ == '__main__':
                         help='Path to pdf info files')
     args = parser.parse_args()
 
+    config.USE_VLLM = args.vllm
     config.QA_MODE = args.qa_mode
     config.chunks_path = args.chunks_path
     config.pdf_info_path = args.pdf_info_path
