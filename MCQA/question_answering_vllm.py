@@ -1,6 +1,5 @@
 from vllm import LLM, SamplingParams
 from transformers import AutoTokenizer
-import json
 import torch
 from typing import Dict, Tuple
 import os
@@ -82,8 +81,8 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, top_k: int) -> Tuple[
             add_generation_prompt=True
         )
         params_list = [
-            SamplingParams(metadata={'seq_idx': i}, max_tokens=1, temperature=0, skip_special_tokens=True)
-            for i in range(top_k)
+            SamplingParams(seed=idx, max_tokens=1, temperature=0, skip_special_tokens=True)
+            for idx in range(top_k)
         ]
 
         clear_dir(config.tmp_vllm_path)
