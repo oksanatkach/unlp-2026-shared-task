@@ -102,8 +102,6 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, top_k: int) -> Tuple[
     answer_letter = options_columns[best_option_idx]
 
     ###################
-    print("Winning margin:", option_scores[best_option_idx])
-
     # now use the margins for the winning option to find best chunk
     winning_margins = option_chunk_margins[best_option_idx]
 
