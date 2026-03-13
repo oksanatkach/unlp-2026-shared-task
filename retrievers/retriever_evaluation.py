@@ -91,6 +91,34 @@ def universal_evaluator(questions, document_retriever, top_k=5):
     print('Page:', round((P / N) * 100, 1))
 
 
+def universal_evaluator_reranker(questions, document_retriever, reranker, reranker_top_k=20, top_k=5):
+    options_columns = ['A', 'B', 'C', 'D', 'E', 'F']
+
+    D = 0
+    P = 0
+    N = 0
+
+    for row in questions:
+        question = row['Question']
+        options = [row[letter] for letter in options_columns if row[letter]]
+        query = question if not options else (question + " " + "\n".join(options))
+        top_chunks = document_retriever.search(query, top_k=reranker_top_k)
+        top_chunks = reranker.rerank(query, top_chunks, top_k=top_k)
+
+        values = zip(*[d.values() for d in top_chunks])
+        top_chunks = dict(zip(top_chunks[0].keys(), values))
+
+        N += 1
+        if row['Domain'] in top_chunks['domain']:
+            if row['Doc_ID'].split('.')[0] in top_chunks['doc_id']:
+                D += 1
+                if int(row['Page_Num']) in top_chunks['page_number']:
+                    P += 1
+
+    print('Doc:', round((D / N) * 100, 1))
+    print('Page:', round((P / N) * 100, 1))
+
+
 # if __name__ == "__main__":
     # options_columns = dev_questions.fieldnames[4:10]
     # print(eval_retrieval(dev_questions, options_columns, document_retriever.retrieve_pages))
