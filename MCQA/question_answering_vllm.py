@@ -1,10 +1,9 @@
 from vllm import LLM, SamplingParams
 from transformers import AutoTokenizer
-import json, sys
+import json
 import torch
 from typing import Dict, Tuple
 import os
-from collections import Counter
 
 from conf import config
 from MCQA import prompt_templates
@@ -12,7 +11,7 @@ from retrievers.hybrid_retriever import HybridRetriever
 
 options_columns = ['A', 'B', 'C', 'D', 'E', 'F']
 document_retriever: HybridRetriever | None = None
-llm : AutoModelForCausalLM | None = None
+llm: LLM | None = None
 tokenizer: AutoTokenizer | None = None
 option_token_ids: torch.Tensor | None = None
 yes_token_id: int | None = None
