@@ -1,10 +1,10 @@
 from typing import Iterable, Dict
 from tqdm import tqdm
 
-from MCQA.question_answering_vllm import init, answer_question_prompt_per_chunk_per_option
+from MCQA import question_answering_vllm as QA
 
 def launch_error_analysis(questions: Iterable[Dict], top_k: int = 5):
-    init()
+    QA.init()
 
     correct_answer_correct_page = 0
     correct_answer_wrong_page = []
@@ -18,7 +18,7 @@ def launch_error_analysis(questions: Iterable[Dict], top_k: int = 5):
             correct_answer = False
             correct_page = False
 
-            answer = answer_question_prompt_per_chunk_per_option(row, top_k=top_k)
+            answer = QA.answer_question_prompt_per_chunk_per_option(row, top_k=top_k)
 
             if answer:
                 option_letter, best_chunk = answer

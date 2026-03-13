@@ -4,24 +4,17 @@ from tqdm import tqdm
 
 from conf import config
 
-if config.USE_VLLM:
-    from MCQA.question_answering_vllm import init as QA_init
-    from MCQA.question_answering_vllm import answer_question_prompt_per_chunk_per_option
-else:
-    from MCQA.question_answering import init as QA_init
-    from MCQA.question_answering import (answer_question_prompt_per_chunk,
-                                         answer_question_single_prompt,
-                                         answer_question_prompt_per_chunk_per_option)
+from MCQA import question_answering_vllm as QA
 
-QA_mode_map = {
-    'prompt_per_chunk': answer_question_prompt_per_chunk,
-    'single_prompt': answer_question_single_prompt,
-    'prompt_per_chunk_per_option': answer_question_prompt_per_chunk_per_option
-}
+# QA_mode_map = {
+#     'prompt_per_chunk': answer_question_prompt_per_chunk,
+#     'single_prompt': answer_question_single_prompt,
+#     'prompt_per_chunk_per_option': answer_question_prompt_per_chunk_per_option
+# }
 
 
 def evaluate_pipeline(questions: Iterable[Dict], top_k: int = 5):
-    QA_init()
+    QA.init()
 
     A = 0
     D = 0
@@ -32,7 +25,7 @@ def evaluate_pipeline(questions: Iterable[Dict], top_k: int = 5):
 
     with tqdm(total=len(questions_list), desc="Evaluating", unit="row") as pbar:
         for row in questions_list:
-            answer = QA_mode_map[config.QA_MODE](row, top_k=top_k)
+            answer = QA.answer_question_prompt_per_chunk_per_option(row, top_k=top_k)
             N += 1
 
             if answer:
