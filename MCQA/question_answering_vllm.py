@@ -60,8 +60,6 @@ def init():
 
 
 def answer_question_prompt_per_chunk_per_option(row: Dict, top_k: int) -> Tuple[str, Dict]:
-    print('answering question')
-
     question = row['Question']
     options = [row[letter] for letter in options_columns if row[letter]]
     query = question + " " + "\n".join(options)
