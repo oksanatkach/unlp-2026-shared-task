@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 from conf import config
 
-if config.USE_VLLM == 'True':
+if config.USE_VLLM:
     from MCQA.question_answering_vllm import init as QA_init
     from MCQA.question_answering_vllm import answer_question_prompt_per_chunk_per_option
 else:
