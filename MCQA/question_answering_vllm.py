@@ -7,12 +7,14 @@ import os
 from conf import config
 from MCQA import prompt_templates
 from retrievers.hybrid_retriever import HybridRetriever
+from retrievers.reranker import CrossEncoderReranker
 from MCQA.utils import clear_dir, read_dir_logits
 
 options_columns = ['A', 'B', 'C', 'D', 'E', 'F']
 document_retriever: HybridRetriever | None = None
 llm: LLM | None = None
 tokenizer: AutoTokenizer | None = None
+reranker: CrossEncoderReranker | None = None
 option_token_ids: torch.Tensor | None = None
 yes_token_id: int | None = None
 no_token_id: int | None = None
@@ -21,7 +23,7 @@ no_token_id: int | None = None
 def init():
     os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
 
-    global document_retriever, llm, tokenizer, option_token_ids, yes_token_id, no_token_id
+    global document_retriever, llm, tokenizer, reranker, option_token_ids, yes_token_id, no_token_id
 
     if document_retriever is None:
         document_retriever = HybridRetriever(embedding_model=config.embedding_model_large)
@@ -41,6 +43,9 @@ def init():
 
     if tokenizer is None:
         tokenizer = AutoTokenizer.from_pretrained(config.model_name)
+
+    if reranker is None:
+        reranker = CrossEncoderReranker(model_name=config.reranker_model_name)
 
     if option_token_ids is None:
         option_token_ids = tokenizer.convert_tokens_to_ids(['A', '▁A',
@@ -63,7 +68,8 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, top_k: int) -> Tuple[
     question = row['Question']
     options = [row[letter] for letter in options_columns if row[letter]]
     query = question + " " + "\n".join(options)
-    top_chunks = document_retriever.search(query, top_k=top_k)
+    top_chunks = document_retriever.search(query, top_k=20)
+    top_chunks = reranker.rerank(query, top_chunks, top_k=top_k)
 
     # this is to make sure the next token logit will be option letter, not a space token
     if not prompt_templates.prompt_template_yes_no.endswith(' '):
