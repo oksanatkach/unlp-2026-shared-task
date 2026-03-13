@@ -44,4 +44,4 @@ embedding_model_large = 'intfloat/multilingual-e5-large'
 
 model_name = os.getenv('MODEL_NAME') or 'lapa-llm/lapa-v0.1.2-instruct'
 
-captured_logits_tmp_path = '/tmp/captured_logits.json'
+tmp_vllm_path = '/tmp/vllm_logits/'

@@ -8,6 +8,7 @@ import os
 from conf import config
 from MCQA import prompt_templates
 from retrievers.hybrid_retriever import HybridRetriever
+from MCQA.utils import clear_dir, read_dir_logits
 
 options_columns = ['A', 'B', 'C', 'D', 'E', 'F']
 document_retriever: HybridRetriever | None = None
@@ -16,11 +17,6 @@ tokenizer: AutoTokenizer | None = None
 option_token_ids: torch.Tensor | None = None
 yes_token_id: int | None = None
 no_token_id: int | None = None
-sampling_params = SamplingParams(
-    temperature=0,
-    max_tokens=1,
-    skip_special_tokens=True,
-)
 
 
 def init():
@@ -78,17 +74,23 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, top_k: int) -> Tuple[
     option_chunk_margins = []  # per-option, per-chunk margins
 
     for option in options:
+
         prompts = [prompt_templates.prompt_template_yes_no % (chunk['text'], question, option) for chunk in top_chunks]
         formatted = tokenizer.apply_chat_template(
             [[{"role": "user", "content": prompt}] for prompt in prompts],
             tokenize=False,
             add_generation_prompt=True
         )
+        params_list = [
+            SamplingParams(metadata={'seq_idx': i}, max_tokens=1, temperature=0, skip_special_tokens=True)
+            for i in range(top_k)
+        ]
 
-        llm.generate(formatted, sampling_params)
+        clear_dir(config.tmp_vllm_path)
 
-        captured = json.load(open(config.captured_logits_tmp_path))
-        captured = torch.tensor(captured)
+        llm.generate(formatted, params_list)
+
+        captured = read_dir_logits(config.tmp_vllm_path, top_k)
 
         yes_logits = captured[:, 0]
         no_logits = captured[:, 1]
