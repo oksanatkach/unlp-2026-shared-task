@@ -87,7 +87,7 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, top_k: int) -> Tuple[
 
         clear_dir(config.tmp_vllm_path)
 
-        llm.generate(formatted, params_list)
+        llm.generate(formatted, params_list, use_tqdm=False)
 
         captured = read_dir_logits(config.tmp_vllm_path, top_k)
 
