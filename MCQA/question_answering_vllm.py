@@ -101,8 +101,22 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, top_k: int) -> Tuple[
     best_option_idx = max(range(len(options)), key=lambda i: option_scores[i])
     answer_letter = options_columns[best_option_idx]
 
+    ###################
+    print("Winning margin:", option_scores[best_option_idx])
+
     # now use the margins for the winning option to find best chunk
-    best_chunk_idx = option_chunk_margins[best_option_idx].argmax().item()
+    winning_margins = option_chunk_margins[best_option_idx]
+
+    # chunks that positively confirm the winning option
+    positive_indices = [i for i in range(len(top_chunks)) if winning_margins[i].item() > 0]
+
+    if positive_indices:
+        # trust retriever rank — lowest index = highest ranked
+        best_chunk_idx = min(positive_indices)
+    else:
+        # no chunk confirms — fall back to retriever top-1
+        best_chunk_idx = 0
+
     best_chunk = top_chunks[best_chunk_idx]
 
     return answer_letter, best_chunk
