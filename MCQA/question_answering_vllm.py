@@ -103,17 +103,10 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, top_k: int) -> Tuple[
 
     ###################
     # now use the margins for the winning option to find best chunk
-    winning_margins = option_chunk_margins[best_option_idx]
+    positive_indices = [i for i in range(min(3, len(top_chunks)))
+                        if option_chunk_margins[best_option_idx][i].item() > 0]
 
-    # chunks that positively confirm the winning option
-    positive_indices = [i for i in range(len(top_chunks)) if winning_margins[i].item() > 0]
-
-    if positive_indices:
-        # trust retriever rank — lowest index = highest ranked
-        best_chunk_idx = min(positive_indices)
-    else:
-        # no chunk confirms — fall back to retriever top-1
-        best_chunk_idx = 0
+    best_chunk_idx = min(positive_indices) if positive_indices else 0
 
     best_chunk = top_chunks[best_chunk_idx]
 
