@@ -104,6 +104,12 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, top_k: int) -> Tuple[
         option_scores.append(margins.max().item())
         option_chunk_margins.append(margins)  # store full tensor
 
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    sorted_scores = sorted(option_scores, reverse=True)
+    winning_margin = sorted_scores[0] - sorted_scores[1]
+    print('Winning margin:', winning_margin)
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
     best_option_idx = max(range(len(options)), key=lambda i: option_scores[i])
     answer_letter = options_columns[best_option_idx]
 
