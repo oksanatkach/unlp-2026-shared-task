@@ -3,17 +3,10 @@ from typing import Iterable, Dict
 from tqdm import tqdm
 
 from conf import config
-
 from MCQA import question_answering_vllm as QA
 
-# QA_mode_map = {
-#     'prompt_per_chunk': answer_question_prompt_per_chunk,
-#     'single_prompt': answer_question_single_prompt,
-#     'prompt_per_chunk_per_option': answer_question_prompt_per_chunk_per_option
-# }
 
-
-def evaluate_pipeline(questions: Iterable[Dict], top_k: int = 5):
+def evaluate_pipeline(questions: Iterable[Dict], initial_top_k: int, final_top_k: int):
     QA.init()
 
     A = 0
@@ -25,8 +18,9 @@ def evaluate_pipeline(questions: Iterable[Dict], top_k: int = 5):
 
     with tqdm(total=len(questions_list), desc="Evaluating", unit="row") as pbar:
         for row in questions_list:
-            answer = QA.answer_question_prompt_per_chunk_per_option(row, top_k=top_k)
-            # answer = QA.answer_question_prompt_per_chunk_per_option_english(row, top_k=top_k)
+            answer = QA.answer_question_prompt_per_chunk_per_option(row=row,
+                                                                    initial_top_k=initial_top_k,
+                                                                    final_top_k=final_top_k)
             N += 1
 
             if answer:
