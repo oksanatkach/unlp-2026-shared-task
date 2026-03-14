@@ -110,8 +110,9 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, top_k: int) -> Tuple[
 
     ###################
     # now use the margins for the winning option to find best chunk
-    positive_indices = [i for i in range(min(3, len(top_chunks)))
-                        if option_chunk_margins[best_option_idx][i].item() > 0]
+    POSITIVE_THRESHOLD = 1.0
+    positive_indices = [i for i in range(len(top_chunks))
+                        if option_chunk_margins[best_option_idx][i].item() > POSITIVE_THRESHOLD]
 
     best_chunk_idx = min(positive_indices) if positive_indices else 0
 
@@ -164,8 +165,9 @@ def answer_question_prompt_per_chunk_per_option_english(row: Dict, top_k: int) -
 
     ###################
     # now use the margins for the winning option to find best chunk
-    positive_indices = [i for i in range(min(3, len(top_chunks)))
-                        if option_chunk_margins[best_option_idx][i].item() > 0]
+    POSITIVE_THRESHOLD = 1.0
+    positive_indices = [i for i in range(len(top_chunks))
+                        if option_chunk_margins[best_option_idx][i].item() > POSITIVE_THRESHOLD]
 
     best_chunk_idx = min(positive_indices) if positive_indices else 0
 
