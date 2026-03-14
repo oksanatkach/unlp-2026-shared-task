@@ -101,10 +101,7 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, top_k: int) -> Tuple[
         no_logits = captured[:, 1]
         margins = yes_logits - no_logits  # (top_k,)
 
-        # option_scores.append(margins.max().item())
-        positive_margins = margins[margins > 0]
-        score = positive_margins.mean().item() if len(positive_margins) > 0 else margins.max().item()
-        option_scores.append(score)
+        option_scores.append(margins.max().item())
 
         option_chunk_margins.append(margins)  # store full tensor
 
@@ -159,11 +156,7 @@ def answer_question_prompt_per_chunk_per_option_english(row: Dict, top_k: int) -
         no_logits = captured[:, 1]
         margins = yes_logits - no_logits  # (top_k,)
 
-        # option_scores.append(margins.max().item())
-        positive_margins = margins[margins > 0]
-        score = positive_margins.mean().item() if len(positive_margins) > 0 else margins.max().item()
-        option_scores.append(score)
-
+        option_scores.append(margins.max().item())
         option_chunk_margins.append(margins)  # store full tensor
 
     best_option_idx = max(range(len(options)), key=lambda i: option_scores[i])
