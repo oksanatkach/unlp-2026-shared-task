@@ -26,6 +26,19 @@ prompt_template_yes_no = '''Текст:
 
 Відповідь:'''
 
+prompt_template_yes_no_english = '''Text:
+<
+%s
+>>>
+
+Question: %s
+
+Statement: %s
+
+Is the statement confirmed by the text? Answer with a single word: "yes" or "no". Do not explain.
+
+Answer:'''
+
 prompt_template_no_retriever = '''Питання: %s
 
 Варіанти відповідей:

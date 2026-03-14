@@ -25,7 +25,8 @@ def evaluate_pipeline(questions: Iterable[Dict], top_k: int = 5):
 
     with tqdm(total=len(questions_list), desc="Evaluating", unit="row") as pbar:
         for row in questions_list:
-            answer = QA.answer_question_prompt_per_chunk_per_option(row, top_k=top_k)
+            # answer = QA.answer_question_prompt_per_chunk_per_option(row, top_k=top_k)
+            answer = QA.answer_question_prompt_per_chunk_per_option_english(row, top_k=top_k)
             N += 1
 
             if answer:

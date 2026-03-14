@@ -108,11 +108,63 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, top_k: int) -> Tuple[
 
         option_chunk_margins.append(margins)  # store full tensor
 
-    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    sorted_scores = sorted(option_scores, reverse=True)
-    winning_margin = sorted_scores[0] - sorted_scores[1]
-    print('Winning margin:', winning_margin)
-    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    best_option_idx = max(range(len(options)), key=lambda i: option_scores[i])
+    answer_letter = options_columns[best_option_idx]
+
+    ###################
+    # now use the margins for the winning option to find best chunk
+    positive_indices = [i for i in range(min(3, len(top_chunks)))
+                        if option_chunk_margins[best_option_idx][i].item() > 0]
+
+    best_chunk_idx = min(positive_indices) if positive_indices else 0
+
+    best_chunk = top_chunks[best_chunk_idx]
+
+    return answer_letter, best_chunk
+
+
+def answer_question_prompt_per_chunk_per_option_english(row: Dict, top_k: int) -> Tuple[str, Dict]:
+    question = row['Question']
+    options = [row[letter] for letter in options_columns if row[letter]]
+    query = question + " " + "\n".join(options)
+    top_chunks = document_retriever.search(query, top_k=top_k)
+
+    # this is to make sure the next token logit will be option letter, not a space token
+    if not prompt_templates.prompt_template_yes_no_english.endswith(' '):
+        prompt_templates.prompt_template_yes_no_english += ' '
+
+    option_scores = []
+    option_chunk_margins = []  # per-option, per-chunk margins
+
+    for option in options:
+
+        prompts = [prompt_templates.prompt_template_yes_no_english % (chunk['text'], question, option) for chunk in top_chunks]
+        formatted = tokenizer.apply_chat_template(
+            [[{"role": "user", "content": prompt}] for prompt in prompts],
+            tokenize=False,
+            add_generation_prompt=True
+        )
+        params_list = [
+            SamplingParams(seed=idx, max_tokens=1, temperature=0, skip_special_tokens=True)
+            for idx in range(top_k)
+        ]
+
+        clear_dir(config.tmp_vllm_path)
+
+        llm.generate(formatted, params_list, use_tqdm=False)
+
+        captured = read_dir_logits(config.tmp_vllm_path, top_k)
+
+        yes_logits = captured[:, 0]
+        no_logits = captured[:, 1]
+        margins = yes_logits - no_logits  # (top_k,)
+
+        # option_scores.append(margins.max().item())
+        positive_margins = margins[margins > 0]
+        score = positive_margins.mean().item() if len(positive_margins) > 0 else margins.max().item()
+        option_scores.append(score)
+
+        option_chunk_margins.append(margins)  # store full tensor
 
     best_option_idx = max(range(len(options)), key=lambda i: option_scores[i])
     answer_letter = options_columns[best_option_idx]
