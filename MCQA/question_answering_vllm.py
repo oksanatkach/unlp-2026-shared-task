@@ -90,9 +90,8 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, initial_top_k: int, f
 
     ###################
     # now use the margins for the winning option to find best chunk
-    POSITIVE_THRESHOLD = 1.0
-    positive_indices = [i for i in range(len(top_chunks))
-                        if option_chunk_margins[best_option_idx][i].item() > POSITIVE_THRESHOLD]
+    positive_indices = [i for i in range(min(3, len(top_chunks)))
+                        if option_chunk_margins[best_option_idx][i].item() > 0]
 
     best_chunk_idx = min(positive_indices) if positive_indices else 0
 
