@@ -7,13 +7,16 @@ from conf import config
 from MCQA import prompt_templates
 from retrievers.hybrid_retriever import HybridRetriever
 from retrievers.reranker import CrossEncoderReranker
-from MCQA.utils import clear_dir, read_dir_logits
 
 options_columns = ['A', 'B', 'C', 'D', 'E', 'F']
 document_retriever: HybridRetriever | None = None
 llm: LLM | None = None
 tokenizer: AutoTokenizer | None = None
 reranker: CrossEncoderReranker | None = None
+sampling_params = SamplingParams(max_tokens=1,
+                                 temperature=0,
+                                 logprobs=10,
+                                 skip_special_tokens=True)
 
 
 def init():
@@ -66,16 +69,9 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, initial_top_k: int, f
             tokenize=False,
             add_generation_prompt=True
         )
-        params_list = [
-            SamplingParams(seed=idx, max_tokens=1, temperature=0, skip_special_tokens=True)
-            for idx in range(final_top_k)
-        ]
+        outputs = llm.generate(formatted, sampling_params, use_tqdm=False)
 
-        clear_dir(config.tmp_vllm_path)
 
-        llm.generate(formatted, params_list, use_tqdm=False)
-
-        captured = read_dir_logits(config.tmp_vllm_path, final_top_k)
 
         yes_logits = captured[:, 0]
         no_logits = captured[:, 1]

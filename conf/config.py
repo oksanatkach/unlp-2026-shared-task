@@ -44,5 +44,3 @@ embedding_model_large = 'intfloat/multilingual-e5-large'
 
 model_name = os.getenv('MODEL_NAME') or 'lapa-llm/lapa-v0.1.2-instruct'
 reranker_model_name = os.getenv('RERANKER_MODEL_NAME') or 'BAAI/bge-reranker-v2-m3'
-
-tmp_vllm_path = '/tmp/vllm_logits/'
