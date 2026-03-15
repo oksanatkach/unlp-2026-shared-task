@@ -12,7 +12,7 @@ from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Tuple, Optional
 
-from retrievers.preprocessor import UkrainianPreprocessor
+from retriever.preprocessor import UkrainianPreprocessor
 
 
 def reciprocal_rank_fusion(
@@ -111,7 +111,7 @@ class HybridRetriever:
             f"FAISS: {self.faiss_index.ntotal} vectors × {self.dim}d"
         )
 
-    # ── Individual retrievers ────────────────
+    # ── Individual retriever ────────────────
 
     def _bm25_search(self, query: str, top_k: int) -> List[Tuple[int, float]]:
         """Sparse keyword search. Returns [(doc_idx, score)] descending."""
@@ -207,24 +207,3 @@ class HybridRetriever:
             self.documents = pickle.load(f)
         with open(os.path.join(directory, "metadata.pkl"), "rb") as f:
             self.metadata = pickle.load(f)
-
-
-if __name__ == "__main__":
-    from conf import config
-    import csv
-
-    # index_docs_and_save_retriever()
-
-    retriever = HybridRetriever(
-        # embedding_model="intfloat/multilingual-e5-base",
-        embedding_model=config.embedding_model,
-        use_e5_prefix=True,
-        device=None
-    )
-    retriever.load(config.hybrid_retriever_path)
-    dev_questions = csv.DictReader(open(config.dev_questions_path))
-    # evaluate_retriever(dev_questions, retriever, top_k=15)
-
-    # top 5: doc 0.95; page: 0.84
-    # top 10: doc 0.96; page 0.885
-    # top 15: doc 0.97; page: 0.91

@@ -1,9 +1,17 @@
 import json
 from typing import Iterable, Dict
 from tqdm import tqdm
+import logging
+
+logger = logging.getLogger(__name__)
 
 from conf import config
-from MCQA import question_answering_vllm as QA
+if config.USE_VLLM:
+    logger.info("Inference method: VLLM")
+    from MCQA import question_answering_vllm as QA
+else:
+    logger.info("Inference method: transformers")
+    from MCQA import question_answering_transformers as QA
 
 
 def evaluate_pipeline(questions: Iterable[Dict], initial_top_k: int, final_top_k: int):

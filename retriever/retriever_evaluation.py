@@ -117,31 +117,3 @@ def universal_evaluator_reranker(questions, document_retriever, reranker, rerank
 
     print('Doc:', round((D / N) * 100, 1))
     print('Page:', round((P / N) * 100, 1))
-
-
-# if __name__ == "__main__":
-    # options_columns = dev_questions.fieldnames[4:10]
-    # print(eval_retrieval(dev_questions, options_columns, document_retriever.retrieve_pages))
-
-
-    # row = next(dev_questions)
-    # print(row)
-    # print(row['Doc_ID'])
-    # print(row['Page_Num'])
-
-    # question = row['Question']
-    # todo: don't use latin letters for options?
-    # currently matching english text and text where ABCDEF appear often
-    # todo: replacing BM25 with semantic embeddings should also fix this
-    # options = [f"{letter}: {row[letter]}" for letter in options_columns if row[letter]]
-
-    # top_pages, hits = retriever.retrieve_pages(question, options)
-    # print(top_pages)
-    # print(hits)
-    # for el in top_pages:
-    #     print(el['domain'])
-    #     print(el['doc_id'])
-    #     print(el['page_number'])
-    #     print(el['score'])
-    #     print(el['chunk_id'])
-    #     print('#######################################')

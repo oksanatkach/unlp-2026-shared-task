@@ -1,5 +1,4 @@
-from vllm import LLM, SamplingParams
-from transformers import AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 from typing import Dict, Tuple
 import torch
 import os
@@ -11,15 +10,11 @@ from retriever.reranker import CrossEncoderReranker
 
 options_columns = ['A', 'B', 'C', 'D', 'E', 'F']
 document_retriever: HybridRetriever | None = None
-llm: LLM | None = None
+llm: AutoModelForCausalLM | None = None
 tokenizer: AutoTokenizer | None = None
 reranker: CrossEncoderReranker | None = None
 yes_token_id: int | None = None
 no_token_id: int | None = None
-sampling_params = SamplingParams(max_tokens=1,
-                                 temperature=0,
-                                 logprobs=10,
-                                 skip_special_tokens=True)
 
 
 def init():
@@ -32,15 +27,11 @@ def init():
         document_retriever.load(config.retriever_path)
 
     if llm is None:
-        llm = LLM(
-            model=config.llm_model_name,
-            dtype="bfloat16",
-            tensor_parallel_size=1,
-            gpu_memory_utilization=0.90,
-            max_model_len=4096,
-            enforce_eager=True,
-            trust_remote_code=True,
-            mm_processor_kwargs={"use_fast": True},
+        llm = AutoModelForCausalLM.from_pretrained(
+            config.llm_model_name,
+            quantization_config=config.bnb_config,
+            device_map="auto",
+            dtype=torch.bfloat16,
         )
 
     if tokenizer is None:
@@ -50,25 +41,6 @@ def init():
 
     if reranker is None:
         reranker = CrossEncoderReranker(model_name=config.reranker_model_name)
-
-
-def get_logprob(logprobs_dict: dict, token_id: int) -> float:
-    """
-    Retrieve logprob for a token_id from vLLM's top-k logprobs dict.
-    Falls back to the minimum value in the dict if the token is not in the top-k.
-    The minimum value is further discounted by 0.3 to heuristically approach the true missing logprob.
-    Note: If the prompt is working correctly it should never be the case that the expected token is missing
-    in the top N logprobs.
-
-    Args:
-        logprobs_dict: output.outputs[0].logprobs[0]  (dict[int, Logprob])
-        token_id: target token ID
-    """
-    if token_id in logprobs_dict:
-        return logprobs_dict[token_id].logprob
-
-    min_logprob_in_top_N = min(v.logprob for v in logprobs_dict.values())
-    return min_logprob_in_top_N * 1.3
 
 
 def answer_question_prompt_per_chunk_per_option(row: Dict, initial_top_k: int, final_top_k: int) -> Tuple[str, Dict]:
@@ -88,17 +60,17 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, initial_top_k: int, f
     for option in options:
 
         prompts = [prompt_templates.prompt_template_yes_no % (chunk['text'], question, option) for chunk in top_chunks]
-        formatted = tokenizer.apply_chat_template(
-            [[{"role": "user", "content": prompt}] for prompt in prompts],
-            tokenize=False,
-            add_generation_prompt=True
-        )
-        outputs = llm.generate(formatted, sampling_params, use_tqdm=False)
+        tokens = tokenizer(prompts, return_tensors='pt', padding=True).to("cuda")
 
-        yes_logprobs = torch.tensor([get_logprob(output.outputs[0].logprobs[0], yes_token_id) for output in outputs])
-        no_logprobs = torch.tensor([get_logprob(output.outputs[0].logprobs[0], no_token_id) for output in outputs])
+        with torch.no_grad():
+            outputs = llm(**tokens)
 
-        margins = yes_logprobs - no_logprobs  # (top_k,)
+        next_token_logits = outputs.logits[:, -1, :].to("cpu")
+        del outputs
+        yes_logits = next_token_logits[:, yes_token_id]
+        no_logits = next_token_logits[:, no_token_id]
+        margins = yes_logits - no_logits  # (top_k,)
+
         option_scores.append(margins.max().item())
         option_chunk_margins.append(margins)  # store full tensor
 
