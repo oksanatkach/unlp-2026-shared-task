@@ -66,7 +66,7 @@ class HybridRetriever:
             device: "cuda", "cpu", or None (auto-detect).
             custom_preprocessor: Tokenizer for BM25. Defaults to UkrainianPreprocessor.
         """
-        self.model = SentenceTransformer(embedding_model, device="cuda:1")
+        self.model = SentenceTransformer(embedding_model, device=device)
         self.use_e5_prefix = use_e5_prefix
         self.dim: int = self.model.get_sentence_embedding_dimension()
         self.preprocess = custom_preprocessor or UkrainianPreprocessor()

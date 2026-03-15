@@ -35,11 +35,11 @@ def init():
         )
 
     if document_retriever is None:
-        document_retriever = HybridRetriever(embedding_model=config.embedding_model_name)
+        document_retriever = HybridRetriever(embedding_model=config.embedding_model_name, device="cpu")
         document_retriever.load(config.retriever_path)
 
     if reranker is None:
-        reranker = CrossEncoderReranker(model_name=config.reranker_model_name, device="cuda:1")
+        reranker = CrossEncoderReranker(model_name=config.reranker_model_name, device="cpu")
 
     if tokenizer is None:
         tokenizer = AutoTokenizer.from_pretrained(config.llm_model_name)
