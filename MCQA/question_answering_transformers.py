@@ -27,15 +27,14 @@ def init():
             config.llm_model_name,
             quantization_config=config.bnb_config,
             device_map="auto",
-            max_memory={0: "10GiB", 1: "10GiB", "cpu": "20GiB"},
         )
 
     if document_retriever is None:
-        document_retriever = HybridRetriever(embedding_model=config.embedding_model_name, device="cpu")
+        document_retriever = HybridRetriever(embedding_model=config.embedding_model_name)
         document_retriever.load(config.retriever_path)
 
     if reranker is None:
-        reranker = CrossEncoderReranker(model_name=config.reranker_model_name, device="cpu")
+        reranker = CrossEncoderReranker(model_name=config.reranker_model_name)
 
     if tokenizer is None:
         tokenizer = AutoTokenizer.from_pretrained(config.llm_model_name)
