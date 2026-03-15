@@ -1,55 +1,16 @@
-from vllm import LLM, SamplingParams
-from transformers import AutoTokenizer
+from vllm import SamplingParams
 from typing import Dict, Tuple
 import torch
-import os
 
-from conf import config
 from MCQA import prompt_templates
-from retriever.hybrid_retriever import HybridRetriever
-from retriever.reranker import CrossEncoderReranker
+from MCQA.objects import llm, document_retriever, tokenizer, reranker
+from MCQA.objects import options_columns, yes_token_id, no_token_id
 
-options_columns = ['A', 'B', 'C', 'D', 'E', 'F']
-document_retriever: HybridRetriever | None = None
-llm: LLM | None = None
-tokenizer: AutoTokenizer | None = None
-reranker: CrossEncoderReranker | None = None
-yes_token_id: int | None = None
-no_token_id: int | None = None
+
 sampling_params = SamplingParams(max_tokens=1,
                                  temperature=0,
                                  logprobs=10,
                                  skip_special_tokens=True)
-
-
-def init():
-    os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
-
-    global document_retriever, llm, tokenizer, reranker, yes_token_id, no_token_id
-
-    if document_retriever is None:
-        document_retriever = HybridRetriever(embedding_model=config.embedding_model_name)
-        document_retriever.load(config.retriever_path)
-
-    if llm is None:
-        llm = LLM(
-            model=config.llm_model_name,
-            dtype="bfloat16",
-            tensor_parallel_size=1,
-            gpu_memory_utilization=0.90,
-            max_model_len=4096,
-            enforce_eager=True,
-            trust_remote_code=True,
-            mm_processor_kwargs={"use_fast": True},
-        )
-
-    if tokenizer is None:
-        tokenizer = AutoTokenizer.from_pretrained(config.llm_model_name)
-        yes_token_id = tokenizer.convert_tokens_to_ids('так')
-        no_token_id = tokenizer.convert_tokens_to_ids('ні')
-
-    if reranker is None:
-        reranker = CrossEncoderReranker(model_name=config.reranker_model_name)
 
 
 def get_logprob(logprobs_dict: dict, token_id: int) -> float:

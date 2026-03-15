@@ -5,17 +5,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+import MCQA
 from conf import config
-if config.USE_VLLM:
-    logger.info("Inference method: VLLM")
-    from MCQA import question_answering_vllm as QA
-else:
-    logger.info("Inference method: transformers")
-    from MCQA import question_answering_transformers as QA
 
 
 def evaluate_pipeline(questions: Iterable[Dict], retriever_top_k: int, reranker_top_k: int):
-    QA.init()
+    MCQA.init()
 
     A = 0
     D = 0
@@ -26,9 +21,7 @@ def evaluate_pipeline(questions: Iterable[Dict], retriever_top_k: int, reranker_
 
     with tqdm(total=len(questions_list), desc="Evaluating", unit="row") as pbar:
         for row in questions_list:
-            answer = QA.answer_question_prompt_per_chunk_per_option(row=row,
-                                                                    retriever_top_k=retriever_top_k,
-                                                                    reranker_top_k=reranker_top_k)
+            answer = MCQA.answer_question(row=row, retriever_top_k=retriever_top_k, reranker_top_k=reranker_top_k)
             N += 1
 
             if answer:

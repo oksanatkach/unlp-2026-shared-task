@@ -1,45 +1,9 @@
-from transformers import Gemma3ForCausalLM, AutoTokenizer
 from typing import Dict, Tuple
 import torch
-import os
 
-from conf import config
 from MCQA import prompt_templates
-from retriever.hybrid_retriever import HybridRetriever
-from retriever.reranker import CrossEncoderReranker
-
-options_columns = ['A', 'B', 'C', 'D', 'E', 'F']
-document_retriever: HybridRetriever | None = None
-llm: Gemma3ForCausalLM | None = None
-tokenizer: AutoTokenizer | None = None
-reranker: CrossEncoderReranker | None = None
-yes_token_id: int | None = None
-no_token_id: int | None = None
-
-
-def init():
-    os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
-
-    global document_retriever, llm, tokenizer, reranker, yes_token_id, no_token_id
-
-    if llm is None:
-        llm = Gemma3ForCausalLM.from_pretrained(
-            config.llm_model_name,
-            quantization_config=config.bnb_config,
-            device_map="auto",
-        )
-
-    if document_retriever is None:
-        document_retriever = HybridRetriever(embedding_model=config.embedding_model_name)
-        document_retriever.load(config.retriever_path)
-
-    if reranker is None:
-        reranker = CrossEncoderReranker(model_name=config.reranker_model_name)
-
-    if tokenizer is None:
-        tokenizer = AutoTokenizer.from_pretrained(config.llm_model_name)
-        yes_token_id = tokenizer.convert_tokens_to_ids('так')
-        no_token_id = tokenizer.convert_tokens_to_ids('ні')
+from MCQA.objects import llm, document_retriever, tokenizer, reranker
+from MCQA.objects import options_columns, yes_token_id, no_token_id
 
 
 def answer_question_prompt_per_chunk_per_option(row: Dict, retriever_top_k: int, reranker_top_k: int) -> Tuple[str, Dict]:
