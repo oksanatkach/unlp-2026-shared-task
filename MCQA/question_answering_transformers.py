@@ -43,12 +43,12 @@ def init():
         reranker = CrossEncoderReranker(model_name=config.reranker_model_name)
 
 
-def answer_question_prompt_per_chunk_per_option(row: Dict, initial_top_k: int, final_top_k: int) -> Tuple[str, Dict]:
+def answer_question_prompt_per_chunk_per_option(row: Dict, retriever_top_k: int, reranker_top_k: int) -> Tuple[str, Dict]:
     question = row['Question']
     options = [row[letter] for letter in options_columns if row[letter]]
     query = question + " " + "\n".join(options)
-    top_chunks = document_retriever.search(query, top_k=initial_top_k)
-    top_chunks = reranker.rerank(query, top_chunks, top_k=final_top_k)
+    top_chunks = document_retriever.search(query, top_k=retriever_top_k)
+    top_chunks = reranker.rerank(query, top_chunks, top_k=reranker_top_k)
 
     # this is to make sure the next token logit will be option letter, not a space token
     if not prompt_templates.prompt_template_yes_no.endswith(' '):

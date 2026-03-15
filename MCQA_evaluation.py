@@ -14,7 +14,7 @@ else:
     from MCQA import question_answering_transformers as QA
 
 
-def evaluate_pipeline(questions: Iterable[Dict], initial_top_k: int, final_top_k: int):
+def evaluate_pipeline(questions: Iterable[Dict], retriever_top_k: int, reranker_top_k: int):
     QA.init()
 
     A = 0
@@ -27,8 +27,8 @@ def evaluate_pipeline(questions: Iterable[Dict], initial_top_k: int, final_top_k
     with tqdm(total=len(questions_list), desc="Evaluating", unit="row") as pbar:
         for row in questions_list:
             answer = QA.answer_question_prompt_per_chunk_per_option(row=row,
-                                                                    initial_top_k=initial_top_k,
-                                                                    final_top_k=final_top_k)
+                                                                    retriever_top_k=retriever_top_k,
+                                                                    reranker_top_k=reranker_top_k)
             N += 1
 
             if answer:
