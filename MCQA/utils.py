@@ -9,19 +9,23 @@ def get_accelerator():
     except FileNotFoundError:
         pass
 
-    # Check TPU
+    # Check TPU via JAX (works without GCE metadata server)
     try:
-        import tensorflow as tf
-        tpus = tf.config.list_logical_devices('TPU')
-        if tpus:
-            return f"TPU: {tpus[0].name}"
-    except ImportError:
+        import jax
+        tpu_devices = jax.devices('tpu')
+        if tpu_devices:
+            # e.g. TpuDevice coords tell you the topology
+            return f"TPU: {len(tpu_devices)}x {tpu_devices[0].device_kind}"
+    except (ImportError, RuntimeError):
         pass
 
+    # Fallback: torch_xla
     try:
         import torch_xla.core.xla_model as xm
-        return f"TPU: {xm.xla_device()}"
-    except ImportError:
+        devices = xm.get_xla_supported_devices('TPU')
+        if devices:
+            return f"TPU: {len(devices)} devices via torch_xla"
+    except (ImportError, RuntimeError):
         pass
 
     return "No GPU or TPU detected (CPU only)"
