@@ -1,6 +1,7 @@
 from vllm import LLM, SamplingParams
 from transformers import AutoTokenizer
 from typing import Dict, Tuple
+import torch
 import os
 
 from conf import config
@@ -13,6 +14,8 @@ document_retriever: HybridRetriever | None = None
 llm: LLM | None = None
 tokenizer: AutoTokenizer | None = None
 reranker: CrossEncoderReranker | None = None
+yes_token_id: int | None = None
+no_token_id: int | None = None
 sampling_params = SamplingParams(max_tokens=1,
                                  temperature=0,
                                  logprobs=10,
@@ -22,7 +25,7 @@ sampling_params = SamplingParams(max_tokens=1,
 def init():
     os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
 
-    global document_retriever, llm, tokenizer, reranker
+    global document_retriever, llm, tokenizer, reranker, yes_token_id, no_token_id
 
     if document_retriever is None:
         document_retriever = HybridRetriever(embedding_model=config.embedding_model_large)
@@ -42,9 +45,30 @@ def init():
 
     if tokenizer is None:
         tokenizer = AutoTokenizer.from_pretrained(config.model_name)
+        yes_token_id = tokenizer.convert_tokens_to_ids('так')
+        no_token_id = tokenizer.convert_tokens_to_ids('ні')
 
     if reranker is None:
         reranker = CrossEncoderReranker(model_name=config.reranker_model_name)
+
+
+def get_logprob(logprobs_dict: dict, token_id: int) -> float:
+    """
+    Retrieve logprob for a token_id from vLLM's top-k logprobs dict.
+    Falls back to the minimum value in the dict if the token is not in the top-k.
+    The minimum value is further discounted by 0.3 to heuristically approach the true missing logprob.
+    Note: If the prompt is working correctly it should never be the case that the expected token is missing
+    in the top N logprobs.
+
+    Args:
+        logprobs_dict: output.outputs[0].logprobs[0]  (dict[int, Logprob])
+        token_id: target token ID
+    """
+    if token_id in logprobs_dict:
+        return logprobs_dict[token_id].logprob
+
+    min_logprob_in_top_N = min(v.logprob for v in logprobs_dict.values())
+    return min_logprob_in_top_N * 1.3
 
 
 def answer_question_prompt_per_chunk_per_option(row: Dict, initial_top_k: int, final_top_k: int) -> Tuple[str, Dict]:
@@ -71,14 +95,11 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, initial_top_k: int, f
         )
         outputs = llm.generate(formatted, sampling_params, use_tqdm=False)
 
+        yes_logprobs = torch.tensor([get_logprob(output.outputs[0].logprobs[0], yes_token_id) for output in outputs])
+        no_logprobs = torch.tensor([get_logprob(output.outputs[0].logprobs[0], no_token_id) for output in outputs])
 
-
-        yes_logits = captured[:, 0]
-        no_logits = captured[:, 1]
-        margins = yes_logits - no_logits  # (top_k,)
-
+        margins = yes_logprobs - no_logprobs  # (top_k,)
         option_scores.append(margins.max().item())
-
         option_chunk_margins.append(margins)  # store full tensor
 
     best_option_idx = max(range(len(options)), key=lambda i: option_scores[i])
@@ -86,7 +107,7 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, initial_top_k: int, f
 
     ###################
     # now use the margins for the winning option to find best chunk
-    positive_indices = [i for i in range(min(3, len(top_chunks)))
+    positive_indices = [i for i in range(len(top_chunks))
                         if option_chunk_margins[best_option_idx][i].item() > 0]
 
     best_chunk_idx = min(positive_indices) if positive_indices else 0
