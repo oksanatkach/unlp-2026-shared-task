@@ -27,7 +27,11 @@ def init():
             config.llm_model_name,
             quantization_config=config.bnb_config,
             device_map="auto",
-            max_memory={0: "11GiB", 1: "11GiB", "cpu": "20GiB"},
+            max_memory={
+                0: "9GiB",  # force ~5GiB headroom on GPU 0 for activations + other models
+                1: "13GiB",  # GPU 1 takes the overflow
+                "cpu": "20GiB",
+            },
         )
 
     if document_retriever is None:
@@ -35,7 +39,7 @@ def init():
         document_retriever.load(config.retriever_path)
 
     if reranker is None:
-        reranker = CrossEncoderReranker(model_name=config.reranker_model_name)
+        reranker = CrossEncoderReranker(model_name=config.reranker_model_name, device="cuda:1")
 
     if tokenizer is None:
         tokenizer = AutoTokenizer.from_pretrained(config.llm_model_name)
