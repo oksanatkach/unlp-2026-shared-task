@@ -58,7 +58,7 @@ def load_llm():
         llm = LLM(
             model='google/gemma-3-4b-it',
             dtype="bfloat16",
-            # set tensor_parallel_size to num of chips on tpu
+            # todo: set tensor_parallel_size to num of chips on tpu
             tensor_parallel_size=1,
             enforce_eager=True,
             hf_overrides=hf_overrides,

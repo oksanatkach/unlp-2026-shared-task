@@ -1,4 +1,5 @@
 import logging
+import os
 
 from conf import config
 from MCQA.utils import get_accelerator
@@ -16,6 +17,8 @@ elif 'TPU' in device:
         logger.error(f"Device is {device}, can't use transformers, loading VLLM model")
     else:
         logger.info(f'Device is {device}, loading VLLM model')
+
+    os.environ["PJRT_DEVICE"] = "TPU"
     load_method = 'VLLM'
 
 elif config.USE_VLLM:
