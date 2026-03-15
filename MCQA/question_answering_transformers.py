@@ -22,25 +22,25 @@ def init():
 
     global document_retriever, llm, tokenizer, reranker, yes_token_id, no_token_id
 
-    if document_retriever is None:
-        document_retriever = HybridRetriever(embedding_model=config.embedding_model_name)
-        document_retriever.load(config.retriever_path)
-
     if llm is None:
         llm = AutoModelForCausalLM.from_pretrained(
             config.llm_model_name,
             quantization_config=config.bnb_config,
             device_map="auto",
-            dtype=torch.bfloat16,
+            max_memory={0: "11GiB", 1: "11GiB", "cpu": "20GiB"},
         )
+
+    if document_retriever is None:
+        document_retriever = HybridRetriever(embedding_model=config.embedding_model_name)
+        document_retriever.load(config.retriever_path)
+
+    if reranker is None:
+        reranker = CrossEncoderReranker(model_name=config.reranker_model_name)
 
     if tokenizer is None:
         tokenizer = AutoTokenizer.from_pretrained(config.llm_model_name)
         yes_token_id = tokenizer.convert_tokens_to_ids('так')
         no_token_id = tokenizer.convert_tokens_to_ids('ні')
-
-    if reranker is None:
-        reranker = CrossEncoderReranker(model_name=config.reranker_model_name)
 
 
 def answer_question_prompt_per_chunk_per_option(row: Dict, retriever_top_k: int, reranker_top_k: int) -> Tuple[str, Dict]:
