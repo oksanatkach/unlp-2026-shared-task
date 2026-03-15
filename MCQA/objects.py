@@ -40,11 +40,10 @@ def load_llm():
 
     elif 'TPU' in device:
         from transformers import AutoConfig
+        import jax
 
-        os.environ["PJRT_DEVICE"] = "TPU"
-        os.environ["HF_TOKEN"] = "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"
-
-        llm_config = AutoConfig.from_pretrained('google/gemma-3-4b-it')
+        num_chips = jax.local_device_count()
+        llm_config = AutoConfig.from_pretrained(config.llm_model_name)
         text_config_dict = llm_config.text_config.to_dict()
 
         hf_overrides = {
@@ -56,10 +55,9 @@ def load_llm():
         hf_overrides.pop('architectures', None)
 
         llm = LLM(
-            model='google/gemma-3-4b-it',
+            model=config.llm_model_name,
             dtype="bfloat16",
-            # todo: set tensor_parallel_size to num of chips on tpu
-            tensor_parallel_size=1,
+            tensor_parallel_size=num_chips,
             enforce_eager=True,
             hf_overrides=hf_overrides,
         )
