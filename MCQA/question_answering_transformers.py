@@ -1,4 +1,4 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import Gemma3ForCausalLM, AutoTokenizer
 from typing import Dict, Tuple
 import torch
 import os
@@ -10,7 +10,7 @@ from retriever.reranker import CrossEncoderReranker
 
 options_columns = ['A', 'B', 'C', 'D', 'E', 'F']
 document_retriever: HybridRetriever | None = None
-llm: AutoModelForCausalLM | None = None
+llm: Gemma3ForCausalLM | None = None
 tokenizer: AutoTokenizer | None = None
 reranker: CrossEncoderReranker | None = None
 yes_token_id: int | None = None
@@ -23,15 +23,11 @@ def init():
     global document_retriever, llm, tokenizer, reranker, yes_token_id, no_token_id
 
     if llm is None:
-        llm = AutoModelForCausalLM.from_pretrained(
+        llm = Gemma3ForCausalLM.from_pretrained(
             config.llm_model_name,
             quantization_config=config.bnb_config,
             device_map="auto",
-            max_memory={
-                0: "9GiB",  # force ~5GiB headroom on GPU 0 for activations + other models
-                1: "13GiB",  # GPU 1 takes the overflow
-                "cpu": "20GiB",
-            },
+            max_memory={0: "10GiB", 1: "10GiB", "cpu": "20GiB"},
         )
 
     if document_retriever is None:
