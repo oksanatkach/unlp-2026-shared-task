@@ -2,9 +2,11 @@ import logging
 
 from conf import config
 from MCQA.utils import get_accelerator
-device = get_accelerator()
 
 logger = logging.getLogger(__name__)
+
+
+device = get_accelerator()
 
 load_method = None
 if config.USE_VLLM and 'GPU' in device:

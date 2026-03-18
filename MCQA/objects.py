@@ -86,8 +86,8 @@ def load_llm():
         return llm
 
 
-def load_retriever():
-    document_retriever = HybridRetriever(embedding_model=config.embedding_model_name)
+def load_retriever(device):
+    document_retriever = HybridRetriever(embedding_model=config.embedding_model_name, device=device)
     document_retriever.load(config.retriever_path)
     return document_retriever
 
@@ -100,11 +100,14 @@ def init():
     if llm is None:
         llm = load_llm()
 
+    retriever_device = 'auto'
+    if load_method == 'VLLM':
+        retriever_device = 'cpu'
     if document_retriever is None:
-        document_retriever = load_retriever()
+        document_retriever = load_retriever(device=retriever_device)
 
     if reranker is None:
-        reranker = CrossEncoderReranker(model_name=config.reranker_model_name)
+        reranker = CrossEncoderReranker(model_name=config.reranker_model_name, device=retriever_device)
 
     if tokenizer is None:
         tokenizer = AutoTokenizer.from_pretrained(config.llm_model_name)
