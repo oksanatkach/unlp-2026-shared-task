@@ -101,9 +101,10 @@ def init():
     if llm is None:
         llm = load_llm()
 
-    retriever_device = 'auto'
-    if load_method == 'VLLM':
+    retriever_device = None
+    if load_method == 'VLLM' and not 'A100' in device:
         retriever_device = 'cpu'
+
     if document_retriever is None:
         document_retriever = load_retriever(device=retriever_device)
 
