@@ -1,5 +1,4 @@
 import logging
-import os
 
 from conf import config
 from MCQA.utils import get_accelerator

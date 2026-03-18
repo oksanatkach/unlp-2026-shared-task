@@ -1,7 +1,7 @@
 import os
 
 
-USE_VLLM = os.getenv('USE_VLLM') or False
+USE_VLLM = True if int(os.getenv('USE_VLLM', 0)) == 1 else False
 dev_questions_path = os.getenv('DEV_QUESTIONS_PATH') or '../data/dev_questions.csv'
 chunks_path = os.getenv('CHUNKS_PATH') or '../data/output/chunks_1000'
 pdf_info_path = os.getenv('PDF_INFO_PATH') or '../data/output/pdf_info'
