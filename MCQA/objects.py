@@ -1,8 +1,9 @@
 import os
 import logging
-from conf import config
+import torch
 from transformers import AutoTokenizer
 
+from conf import config
 from MCQA.device import device, load_method
 from retriever.hybrid_retriever import HybridRetriever
 from retriever.reranker import CrossEncoderReranker
@@ -26,10 +27,11 @@ no_token_id: int | None = None
 
 def load_llm():
     if load_method == 'VLLM' and 'A100' in device:
+        # use bfloat16
         llm = LLM(
             model=config.llm_model_name,
             dtype="bfloat16",
-            tensor_parallel_size=1,
+            tensor_parallel_size=torch.cuda.device_count(),
             gpu_memory_utilization=0.90,
             max_model_len=4096,
             enforce_eager=True,
@@ -38,11 +40,11 @@ def load_llm():
         )
         return llm
 
-    elif 'TPU' in device:
+    elif load_method == 'VLLM':
         from transformers import AutoConfig
-        import jax
+        from vllm.config import AttentionConfig
+        from vllm.v1.attention.backends.registry import AttentionBackendEnum
 
-        num_chips = jax.local_device_count()
         llm_config = AutoConfig.from_pretrained(config.llm_model_name)
         text_config_dict = llm_config.text_config.to_dict()
 
@@ -56,10 +58,14 @@ def load_llm():
 
         llm = LLM(
             model=config.llm_model_name,
-            dtype="bfloat16",
-            tensor_parallel_size=num_chips,
+            dtype="float16",
+            tensor_parallel_size=torch.cuda.device_count(),
             enforce_eager=True,
             hf_overrides=hf_overrides,
+            max_model_len=2048,
+            gpu_memory_utilization=0.90,
+            limit_mm_per_prompt={"image": 0},
+            attention_config=AttentionConfig(backend=AttentionBackendEnum.TRITON_ATTN)
         )
         return llm
 
