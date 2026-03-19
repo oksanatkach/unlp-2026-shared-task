@@ -10,7 +10,9 @@ from retriever.reranker import CrossEncoderReranker
 
 logger = logging.getLogger(__name__)
 
-if load_method == 'VLLM':
+if load_method == 'vllm_server':
+    llm = None
+elif load_method == 'VLLM':
     from vllm import LLM
     llm: LLM | None = None
 else:
@@ -91,7 +93,7 @@ def init():
 
     global llm, document_retriever, reranker, tokenizer, yes_token_id, no_token_id
 
-    if llm is None:
+    if load_method != "vllm_server" and llm is None:
         llm = load_llm()
 
     retriever_device = 'cpu'

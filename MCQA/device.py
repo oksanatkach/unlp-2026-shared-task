@@ -9,7 +9,11 @@ logger = logging.getLogger(__name__)
 device = get_accelerator()
 
 load_method = None
-if config.USE_VLLM and 'GPU' in device:
+if config.VLLM_SERVE:
+    logger.info(f'Using VLLM server')
+    load_method = 'vllm_server'
+
+elif config.USE_VLLM and 'GPU' in device:
     logger.info(f'Device is {device}, loading VLLM model')
     load_method = 'VLLM'
 
