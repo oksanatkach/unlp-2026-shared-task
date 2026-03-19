@@ -14,8 +14,8 @@ if load_method == 'VLLM':
     from vllm import LLM
     llm: LLM | None = None
 else:
-    from transformers import Gemma3ForCausalLM
-    llm: Gemma3ForCausalLM | None = None
+    from transformers import AutoModelForCausalLM
+    llm: AutoModelForCausalLM | None = None
 
 options_columns = ['A', 'B', 'C', 'D', 'E', 'F']
 document_retriever: HybridRetriever | None = None
@@ -74,15 +74,13 @@ def load_llm():
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_use_double_quant=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_quant_type="nf4",  # A special 4-bit data type
+            bnb_4bit_compute_dtype=torch.bfloat16  # Use bfloat16 for faster computation
         )
-        llm = Gemma3ForCausalLM.from_pretrained(
+        llm = AutoModelForCausalLM.from_pretrained(
             config.llm_model_name,
             quantization_config=bnb_config,
-            torch_dtype=torch.bfloat16,
-            attn_implementation="eager",
-            device_map="auto",
+            device_map="cuda"
         )
 
         return llm
