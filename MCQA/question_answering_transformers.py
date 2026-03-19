@@ -22,8 +22,7 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, retriever_top_k: int,
     for option in options:
 
         prompts = [prompt_templates.prompt_template_yes_no % (chunk['text'], question, option) for chunk in top_chunks]
-        tokens = objects.tokenizer(prompts, return_tensors='pt', padding=True)
-        tokens = {k: v.to(objects.llm.device) for k, v in tokens.items()}
+        tokens = objects.tokenizer(prompts, return_tensors='pt', padding=True).to(objects.llm.device)
 
         with torch.inference_mode():
             outputs = objects.llm(**tokens)
