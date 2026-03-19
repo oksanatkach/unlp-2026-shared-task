@@ -78,7 +78,7 @@ def load_llm():
             bnb_4bit_compute_dtype=torch.bfloat16,
         )
         llm = Gemma3ForCausalLM.from_pretrained(
-            'lapa-llm/lapa-v0.1.2-instruct',
+            config.llm_model_name,
             quantization_config=bnb_config,
             torch_dtype=torch.bfloat16,
             attn_implementation="eager",
