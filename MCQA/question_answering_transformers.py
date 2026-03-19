@@ -22,13 +22,17 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, retriever_top_k: int,
     for option in options:
 
         prompts = [prompt_templates.prompt_template_yes_no % (chunk['text'], question, option) for chunk in top_chunks]
-        tokens = objects.tokenizer(prompts, return_tensors='pt', padding=True).to(objects.llm.device)
+        formatted = objects.tokenizer.apply_chat_template(
+            [[{"role": "user", "content": prompt}] for prompt in prompts],
+            tokenize=False,
+            add_generation_prompt=True
+        )
+        tokens = objects.tokenizer(formatted, return_tensors='pt', padding=True).to(objects.llm.device)
 
         with torch.inference_mode():
             outputs = objects.llm(**tokens)
 
         next_token_logits = outputs.logits[:, -1, :]
-        del outputs
         yes_logits = next_token_logits[:, objects.yes_token_id]
         no_logits = next_token_logits[:, objects.no_token_id]
         margins = yes_logits - no_logits  # (top_k,)
