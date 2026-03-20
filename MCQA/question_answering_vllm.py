@@ -14,7 +14,7 @@ sampling_params = SamplingParams(max_tokens=1,
                                  skip_special_tokens=True)
 
 
-def get_logprob(logprobs_dict: dict, token_id: int) -> float:
+def get_logprob(logprobs_dict: dict, token_id: int | str) -> float:
     """
     Retrieve logprob for a token_id from vLLM's top-k logprobs dict.
     Falls back to the minimum value in the dict if the token is not in the top-k.
@@ -114,8 +114,8 @@ def answer_question_prompt_per_chunk_per_option_API(row: Dict, retriever_top_k: 
         )
         outputs = response.json()['choices']
 
-        yes_logprobs = torch.tensor([get_logprob(output['logprobs']['top_logprobs'][0], objects.yes_token_id) for output in outputs])
-        no_logprobs = torch.tensor([get_logprob(output['logprobs']['top_logprobs'][0], objects.no_token_id) for output in outputs])
+        yes_logprobs = torch.tensor([get_logprob(output['logprobs']['top_logprobs'][0], 'так') for output in outputs])
+        no_logprobs = torch.tensor([get_logprob(output['logprobs']['top_logprobs'][0], 'ні') for output in outputs])
 
         margins = yes_logprobs - no_logprobs  # (top_k,)
         option_scores.append(margins.max().item())
