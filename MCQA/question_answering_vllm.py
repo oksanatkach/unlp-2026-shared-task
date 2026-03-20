@@ -7,7 +7,7 @@ import MCQA.objects as objects
 from conf import config
 
 
-def get_logprob(logprobs_dict: dict, token_id: int | str) -> float:
+def get_logprob(logprobs_dict: dict, token_id: int) -> float:
     """
     Retrieve logprob for a token_id from vLLM's top-k logprobs dict.
     Falls back to the minimum value in the dict if the token is not in the top-k.
@@ -23,6 +23,14 @@ def get_logprob(logprobs_dict: dict, token_id: int | str) -> float:
         return logprobs_dict[token_id].logprob
 
     min_logprob_in_top_N = min(v.logprob for v in logprobs_dict.values())
+    return min_logprob_in_top_N * 1.3
+
+
+def get_logprob_API(logprobs_dict: dict, token: str) -> float:
+    if token in logprobs_dict:
+        return logprobs_dict[token]
+
+    min_logprob_in_top_N = min(v for v in logprobs_dict.values())
     return min_logprob_in_top_N * 1.3
 
 
@@ -107,8 +115,8 @@ def answer_question_prompt_per_chunk_per_option_API(row: Dict, retriever_top_k: 
         )
         outputs = response.json()['choices']
 
-        yes_logprobs = torch.tensor([get_logprob(output['logprobs']['top_logprobs'][0], 'так') for output in outputs])
-        no_logprobs = torch.tensor([get_logprob(output['logprobs']['top_logprobs'][0], 'ні') for output in outputs])
+        yes_logprobs = torch.tensor([get_logprob_API(output['logprobs']['top_logprobs'][0], 'так') for output in outputs])
+        no_logprobs = torch.tensor([get_logprob_API(output['logprobs']['top_logprobs'][0], 'ні') for output in outputs])
 
         margins = yes_logprobs - no_logprobs  # (top_k,)
         option_scores.append(margins.max().item())
