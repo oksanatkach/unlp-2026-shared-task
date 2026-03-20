@@ -1,4 +1,3 @@
-from vllm import SamplingParams
 from typing import Dict, Tuple
 import torch
 import requests
@@ -6,12 +5,6 @@ import requests
 from MCQA import prompt_templates
 import MCQA.objects as objects
 from conf import config
-
-
-sampling_params = SamplingParams(max_tokens=1,
-                                 temperature=0,
-                                 logprobs=10,
-                                 skip_special_tokens=True)
 
 
 def get_logprob(logprobs_dict: dict, token_id: int | str) -> float:
@@ -55,7 +48,7 @@ def answer_question_prompt_per_chunk_per_option(row: Dict, retriever_top_k: int,
             tokenize=False,
             add_generation_prompt=True
         )
-        outputs = objects.llm.generate(formatted, sampling_params, use_tqdm=False)
+        outputs = objects.llm.generate(formatted, objects.sampling_params, use_tqdm=False)
 
         yes_logprobs = torch.tensor([get_logprob(output.outputs[0].logprobs[0], objects.yes_token_id) for output in outputs])
         no_logprobs = torch.tensor([get_logprob(output.outputs[0].logprobs[0], objects.no_token_id) for output in outputs])

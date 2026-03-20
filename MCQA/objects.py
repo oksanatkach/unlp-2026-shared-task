@@ -13,8 +13,13 @@ logger = logging.getLogger(__name__)
 if load_method == 'vllm_server':
     llm = None
 elif load_method == 'VLLM':
-    from vllm import LLM
+    from vllm import LLM, SamplingParams
+
     llm: LLM | None = None
+    sampling_params = SamplingParams(max_tokens=1,
+                                     temperature=0,
+                                     logprobs=10,
+                                     skip_special_tokens=True)
 else:
     from transformers import AutoModelForCausalLM
     llm: AutoModelForCausalLM | None = None
