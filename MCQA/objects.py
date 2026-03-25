@@ -104,7 +104,7 @@ def init():
     if document_retriever is None:
         document_retriever = load_retriever(device=config.retriever_device)
 
-    if reranker is None:
+    if reranker is None and config.USE_RERANKER:
         reranker = CrossEncoderReranker(model_name=config.reranker_model_name, device=config.retriever_device)
 
     if tokenizer is None:
