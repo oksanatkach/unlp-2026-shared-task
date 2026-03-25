@@ -10,3 +10,4 @@ retriever_path = os.getenv('RETRIEVER_PATH') or '../data/uk_hybrid_index_1000_e5
 embedding_model_name = os.getenv('EMBEDDING_MODEL_NAME') or 'intfloat/multilingual-e5-large'
 reranker_model_name = os.getenv('RERANKER_MODEL_NAME') or 'BAAI/bge-reranker-v2-m3'
 llm_model_name = os.getenv('LLM_MODEL_NAME') or 'lapa-llm/lapa-v0.1.2-instruct'
+retriever_device = os.getenv('RETRIEVER_DEVICE') or 'cpu'

@@ -101,13 +101,11 @@ def init():
     if load_method != "vllm_server" and llm is None:
         llm = load_llm()
 
-    retriever_device = 'cpu'
-
     if document_retriever is None:
-        document_retriever = load_retriever(device=retriever_device)
+        document_retriever = load_retriever(device=config.retriever_device)
 
     if reranker is None:
-        reranker = CrossEncoderReranker(model_name=config.reranker_model_name, device=retriever_device)
+        reranker = CrossEncoderReranker(model_name=config.reranker_model_name, device=config.retriever_device)
 
     if tokenizer is None:
         tokenizer = AutoTokenizer.from_pretrained(config.llm_model_name)
