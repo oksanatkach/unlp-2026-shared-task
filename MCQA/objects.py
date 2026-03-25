@@ -70,7 +70,7 @@ def load_llm():
             enforce_eager=True,
             hf_overrides=hf_overrides,
             max_model_len=2048,
-            gpu_memory_utilization=0.90,
+            gpu_memory_utilization=0.80,
             limit_mm_per_prompt={"image": 0},
             attention_config=AttentionConfig(backend=AttentionBackendEnum.TRITON_ATTN)
         )
