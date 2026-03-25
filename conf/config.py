@@ -11,3 +11,4 @@ embedding_model_name = os.getenv('EMBEDDING_MODEL_NAME') or 'intfloat/multilingu
 reranker_model_name = os.getenv('RERANKER_MODEL_NAME') or 'BAAI/bge-reranker-v2-m3'
 llm_model_name = os.getenv('LLM_MODEL_NAME') or 'lapa-llm/lapa-v0.1.2-instruct'
 retriever_device = os.getenv('RETRIEVER_DEVICE') or 'cpu'
+llm_gpu_memory_utilization = os.getenv('LLM_GPU_MEMORY_UTILIZATION') or '0.5'
